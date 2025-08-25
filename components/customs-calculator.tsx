@@ -30,6 +30,7 @@ import {
   FileText,
   Clock,
   RotateCcw,
+  Menu,
 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -37,9 +38,12 @@ import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { LanguageToggle } from "@/components/language-toggle"
 import { useLanguage } from "@/components/language-provider"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { Switch } from "@/components/ui/switch"
 
 import { useRouter, useSearchParams } from "next/navigation"
 
@@ -199,6 +203,7 @@ export default function CustomsCalculator() {
   const [isRetrying, setIsRetrying] = useState(false)
   const [errorState, setErrorState] = useState<string | null>(null)
   const { toast } = useToast()
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const [favorites, setFavorites] = useState<string[]>([])
   const [isSharing, setIsSharing] = useState(false)
@@ -451,16 +456,16 @@ export default function CustomsCalculator() {
       setCarData(cars)
       setFilteredCars(cars.slice(0, 50))
       toast({
-        title: "Car database loaded",
-        description: `Successfully loaded ${cars.length} vehicles`,
+        title: t.toasts?.carDbLoadedTitle ?? "Car database loaded",
+        description: `${t.toasts?.carDbLoadedDescPrefix ?? "Successfully loaded"} ${cars.length} ${t.toasts?.vehiclesNoun ?? "vehicles"}`,
       })
       console.log("[v0] Loaded", cars.length, "cars from CSV")
     } catch (error) {
       console.log("[v0] Error fetching car data:", error)
-      setErrorState("Failed to load car database. Please try again.")
+      setErrorState(t.toasts?.carDbErrorDesc ?? "Failed to load car database. Please try again.")
       toast({
-        title: "Error loading car database",
-        description: "Please check your connection and try again",
+        title: t.toasts?.carDbErrorTitle ?? "Error loading car database",
+        description: t.toasts?.carDbErrorDesc ?? "Please check your connection and try again",
         variant: "destructive",
       })
     } finally {
@@ -503,14 +508,14 @@ export default function CustomsCalculator() {
 
       setLastUpdated(new Date())
       toast({
-        title: "Exchange rates updated",
-        description: "Latest rates have been fetched successfully",
+        title: t.toasts?.ratesUpdatedTitle ?? "Exchange rates updated",
+        description: t.toasts?.ratesUpdatedDesc ?? "Latest rates have been fetched successfully",
       })
     } catch (error) {
       console.log("[v0] Error fetching exchange rate:", error)
       toast({
-        title: "Failed to update exchange rates",
-        description: "Using default rates. Please try again later.",
+        title: t.toasts?.ratesFailedTitle ?? "Failed to update exchange rates",
+        description: t.toasts?.ratesFailedDesc ?? "Using default rates. Please try again later.",
         variant: "destructive",
       })
     } finally {
@@ -607,8 +612,8 @@ export default function CustomsCalculator() {
     })
 
     toast({
-      title: favorites.includes(calculationId) ? "Removed from favorites" : "Added to favorites",
-      description: "Your favorite calculations are saved locally",
+      title: favorites.includes(calculationId) ? (t.toasts?.favRemovedTitle ?? "Removed from favorites") : (t.toasts?.favAddedTitle ?? "Added to favorites"),
+      description: t.toasts?.favDesc ?? "Your favorite calculations are saved locally",
     })
   }
 
@@ -625,14 +630,14 @@ export default function CustomsCalculator() {
       const shareUrl = `${window.location.origin}${relativeUrl}`
         await navigator.clipboard.writeText(shareUrl)
         toast({
-        title: "Link copied",
-        description: "The URL with your inputs has been copied to the clipboard.",
+        title: t.toasts?.linkCopiedTitle ?? "Link copied",
+        description: t.toasts?.linkCopiedDesc ?? "The URL with your inputs has been copied to the clipboard.",
         })
     } catch (error) {
       console.log("[v0] Share failed:", error)
       toast({
-        title: "Share failed",
-        description: "Please try again or copy manually",
+        title: t.toasts?.shareFailedTitle ?? "Share failed",
+        description: t.toasts?.shareFailedDesc ?? "Please try again or copy manually",
         variant: "destructive",
       })
     } finally {
@@ -713,8 +718,8 @@ export default function CustomsCalculator() {
     } catch {}
 
     toast({
-      title: "Calculation loaded",
-      description: "Previous calculation has been restored",
+      title: t.toasts?.calcLoadedTitle ?? "Calculation loaded",
+      description: t.toasts?.calcLoadedDesc ?? "Previous calculation has been restored",
     })
   }
 
@@ -739,8 +744,8 @@ export default function CustomsCalculator() {
 
     if (!currentPrice || !currentType || !currentRate) {
       toast({
-        title: "Missing information",
-        description: "Please fill in all required fields",
+        title: t.toasts?.missingInfoTitle ?? "Missing information",
+        description: t.toasts?.missingInfoDesc ?? "Please fill in all required fields",
         variant: "destructive",
       })
       return
@@ -756,8 +761,8 @@ export default function CustomsCalculator() {
 
     if (price <= 0) {
       toast({
-        title: "Invalid price",
-        description: "Please enter a valid car price",
+        title: t.toasts?.invalidPriceTitle ?? "Invalid price",
+        description: t.toasts?.invalidPriceDesc ?? "Please enter a valid car price",
         variant: "destructive",
       })
       setIsCalculating(false)
@@ -892,18 +897,26 @@ export default function CustomsCalculator() {
     if (suppressNextHistory) setSuppressNextHistory(false)
 
     console.log("[v0] Setting result state:", calculationResult)
+    const hadResult = !!result
     setResult(calculationResult)
     setIsCalculating(false)
 
     setHighlightCard(true)
     setTimeout(() => setHighlightCard(false), 3000)
+
+    try {
+      const isSmallScreen = window.matchMedia && window.matchMedia('(max-width: 640px)').matches
+      if (isSmallScreen && pdfRef.current) {
+        pdfRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    } catch {}
   }
 
   const clearHistory = () => {
     setCalculationHistory([])
     toast({
-      title: "History cleared",
-      description: "All calculation history has been removed",
+      title: t.toasts?.historyClearedTitle ?? "History cleared",
+      description: t.toasts?.historyClearedDesc ?? "All calculation history has been removed",
     })
   }
 
@@ -911,8 +924,8 @@ export default function CustomsCalculator() {
     setCalculationHistory((prev) => prev.filter((h) => h.id !== calculationId))
     setFavorites((prev) => prev.filter((id) => id !== calculationId))
     toast({
-      title: "Entry deleted",
-      description: "The calculation has been removed from history.",
+      title: t.toasts?.entryDeletedTitle ?? "Entry deleted",
+      description: t.toasts?.entryDeletedDesc ?? "The calculation has been removed from history.",
     })
   }
 
@@ -938,8 +951,8 @@ export default function CustomsCalculator() {
     URL.revokeObjectURL(url)
 
     toast({
-      title: "Calculation exported",
-      description: "Download started successfully",
+      title: t.toasts?.exportedTitle ?? "Calculation exported",
+      description: t.toasts?.exportedDesc ?? "Download started successfully",
     })
   }
 
@@ -1111,7 +1124,7 @@ export default function CustomsCalculator() {
   const exportToPDF = async () => {
     const target = pdfRef.current
     if (!target) {
-      toast({ title: "Nothing to export", description: "Please calculate first.", variant: "destructive" })
+      toast({ title: t.toasts?.nothingToExportTitle ?? "Nothing to export", description: t.toasts?.nothingToExportDesc ?? "Please calculate first.", variant: "destructive" })
       return
     }
 
@@ -1131,6 +1144,7 @@ export default function CustomsCalculator() {
       if (!doc) throw new Error("Unable to access print frame")
 
       const docClass = document.documentElement.className
+      const lightDocClass = (docClass || "").replace(/\bdark\b/g, "").trim()
       const headHtml = Array.from(document.head.querySelectorAll('link[rel="stylesheet"], style'))
         .map((n) => n.outerHTML)
         .join("\n")
@@ -1138,14 +1152,15 @@ export default function CustomsCalculator() {
 
       doc.open()
       doc.write(`<!doctype html>
-<html class="${docClass}" lang="${language}" dir="${language === "ar" ? "rtl" : "ltr"}">
+<html class="${lightDocClass}" lang="${language}" dir="${language === "ar" ? "rtl" : "ltr"}">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     ${headHtml}
     <style>
       @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-      body { background: #fff; padding: 24px; }
+      :root { color-scheme: light; }
+      body { background: #fff; color: #0a0a0a; padding: 24px; }
       .print-container { max-width: 900px; margin: 0 auto; }
       .print-only { display: block !important; }
       /* Remove borders/shadows and hide buttons in result card when printing */
@@ -1180,7 +1195,7 @@ export default function CustomsCalculator() {
       }, 350)
     } catch (err) {
       console.log("[v0] iFrame print failed:", err)
-      toast({ title: "Failed to open print dialog", description: "Please try again.", variant: "destructive" })
+      toast({ title: t.toasts?.printFailedTitle ?? "Failed to open print dialog", description: t.toasts?.printFailedDesc ?? "Please try again.", variant: "destructive" })
     }
   }
 
@@ -1215,14 +1230,14 @@ export default function CustomsCalculator() {
       setCopiedCalculation(calculation.id)
       setTimeout(() => setCopiedCalculation(null), 2000)
       toast({
-        title: "Link copied to clipboard",
-        description: "Share this URL to let others see your calculation",
+        title: t.toasts?.linkCopiedToClipboardTitle ?? "Link copied to clipboard",
+        description: t.toasts?.linkCopiedToClipboardDesc ?? "Share this URL to let others see your calculation",
       })
     } catch (error) {
       console.log("[v0] Share failed:", error)
       toast({
-        title: "Share failed",
-        description: "Please try again or copy manually",
+        title: t.toasts?.shareFailedTitle ?? "Share failed",
+        description: t.toasts?.shareFailedDesc ?? "Please try again or copy manually",
         variant: "destructive",
       })
     } finally {
@@ -1245,15 +1260,50 @@ export default function CustomsCalculator() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       <TooltipProvider>
-        <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 max-w-6xl">
-          <div className="text-center mb-6 sm:mb-8">
+        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-6xl">
+          <div className="text-center mb-3 sm:mb-8">
             <div className="flex items-center justify-between mb-4">
-              <div className="flex-1" />
+              <div className="flex items-center gap-2 sm:hidden">
+                <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Open menu">
+                      <Menu className="h-5 w-5" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side={language === "ar" ? "right" : "left"} className="w-80">
+                    <SheetHeader>
+                      <SheetTitle>{t.calculator?.appTitle ?? "Car Import Customs Calculator"}</SheetTitle>
+                    </SheetHeader>
+                    <div className="mt-4 space-y-3">
+                      <Button
+                        variant="ghost"
+                        onClick={() => { setEntryMode("search"); setIsMenuOpen(false) }}
+                        className={`w-full justify-start h-11 ${entryMode === "search" ? "bg-muted/70" : ""}`}
+                      >
+                        <Search className="h-4 w-4 mr-2" /> {t.calculator?.searchDatabase ?? "Search Database"}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => { setEntryMode("manual"); setSelectedCarDetails(null); setResult(null); setIsMenuOpen(false) }}
+                        className={`w-full justify-start h-11 ${entryMode === "manual" ? "bg-muted/70" : ""}`}
+                      >
+                        <Calculator className="h-4 w-4 mr-2" /> {t.calculator?.manualEntry ?? "Manual Entry"}
+                      </Button>
+                      <Button variant="ghost" onClick={handleReset} className="w-full justify-start h-11">
+                        <RotateCcw className="h-4 w-4 mr-2" /> {t.common?.reset ?? "Reset"}
+                      </Button>
+                      <Button variant="ghost" onClick={() => { setShowHistory(true); setIsMenuOpen(false) }} className="w-full justify-start h-11">
+                        <History className="h-4 w-4 mr-2" /> {t.common?.history ?? "History"}
+                      </Button>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              </div>
               <div className="flex items-center justify-center gap-2 sm:gap-3">
                 <div className="p-2 sm:p-3 bg-primary/10 rounded-full animate-pulse">
                   <Car className="h-6 w-6 sm:h-8 sm:w-8 text-primary" aria-hidden="true" />
                 </div>
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground leading-tight">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground leading-tight sm:mt-0 mt-1">
                   {t.calculator?.appTitle ?? "Car Import Customs Calculator"}
                 </h1>
               </div>
@@ -1281,8 +1331,8 @@ export default function CustomsCalculator() {
               )}
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-4 sm:mt-6">
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 p-1 bg-muted/30 rounded-lg">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-0 sm:mt-6">
+              <div className="hidden sm:flex flex-col sm:flex-row gap-2 sm:gap-4 p-1 bg-muted/30 rounded-lg">
                 <Button
                   variant={entryMode === "search" ? "default" : "ghost"}
                   onClick={() => setEntryMode("search")}
@@ -1318,7 +1368,7 @@ export default function CustomsCalculator() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="gap-2 bg-transparent hover:bg-muted/50 transition-all duration-200 min-h-[44px] px-4 hover:scale-105 active:scale-95"
+                    className="gap-2 bg-transparent hover:bg-muted/50 transition-all duration-200 min-h-[44px] px-4 hover:scale-105 active:scale-95 hidden sm:flex"
                     aria-label={`View calculation history (${calculationHistory.length} items)`}
                   >
                     <History className="h-4 w-4" aria-hidden="true" />
@@ -1356,7 +1406,7 @@ export default function CustomsCalculator() {
                               <div className="space-y-2 flex-1">
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <Badge variant="secondary" className="animate-in fade-in-50 text-xs">
-                                    {calc.carDetails.type}
+                                    {calc.carDetails.type === "new" ? (t.calculator?.newCarLabel ?? "New Car") : (t.calculator?.usedCarLabel ?? "Used Car")}
                                   </Badge>
                                   <span className="font-medium text-sm sm:text-base break-words">
                                     {calc.carDetails.brand} {calc.carDetails.model}
@@ -1375,9 +1425,9 @@ export default function CustomsCalculator() {
                                   </Button>
                                 </div>
                                 <div className="text-xs sm:text-sm text-muted-foreground">
-                                  Price: {formatNumber(Number(calc.carDetails.price))} {calc.carDetails.currency === "USD" ? "$" : calc.carDetails.currency === "EUR" ? "€" : (t.currencies?.DZD ?? "DZD")} • Total:{" "}
+                                  {(t.calculator?.carPrice ?? "Car Price:") + " "}{formatNumber(Number(calc.carDetails.price))} {calc.carDetails.currency === "USD" ? "$" : calc.carDetails.currency === "EUR" ? "€" : (t.currencies?.DZD ?? "DZD")} • {(t.calculator?.labels?.totalShort ?? "Total") + ":"}{" "}
                                   <span className="font-semibold text-primary">
-                                    {formatNumber(calc.result.totalFee)} DZD
+                                    {formatNumber(calc.result.totalFee)} {t.currencies?.DZD ?? "DZD"}
                                   </span>
                                 </div>
                                 <div className="text-xs text-muted-foreground">{formatTime(calc.timestamp as unknown as Date)}</div>
@@ -1429,17 +1479,17 @@ export default function CustomsCalculator() {
         </div>
 
         <main className="container mx-auto px-4 py-6 sm:py-8 md:py-12 max-w-7xl">
-          <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8 mb-6 sm:mb-8">
+          <div className="grid lg:grid-cols-2 gap-3 sm:gap-6 md:gap-8 mb-4 sm:mb-8">
             {/* Left Column - Search/Manual Entry Cards */}
             <div className="space-y-6">
               {entryMode === "search" && (
-                <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-l-4 border-l-primary/20">
+                <Card className={`shadow-lg hover:shadow-xl transition-all duration-300 ${language === "ar" ? "border-r-4 border-r-primary/20" : "border-l-4 border-l-primary/20"}`}>
                   <CardHeader className="pb-4 sm:pb-6">
                     <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                       <Search className="h-5 w-5 text-primary" aria-hidden="true" />
                       {t.calculator?.searchDatabaseTitle ?? "Search Official Car Database"}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
+                      <Popover>
+                        <PopoverTrigger asChild>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -1448,13 +1498,13 @@ export default function CustomsCalculator() {
                           >
                             <Info className="h-4 w-4 text-muted-foreground" />
                           </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
+                        </PopoverTrigger>
+                        <PopoverContent>
                           <p className="max-w-xs">
                             {t.calculator?.searchDatabaseDescription ?? "Search from the official Algerian customs reference database with pre-approved prices and"} specifications.
                           </p>
-                        </TooltipContent>
-                      </Tooltip>
+                        </PopoverContent>
+                      </Popover>
                     </CardTitle>
                     <CardDescription className="text-sm leading-relaxed">
                       {t.calculator?.findFromList ?? "Find your car from the official Algerian customs reference list"}
@@ -1464,7 +1514,7 @@ export default function CustomsCalculator() {
                     {errorState && (
                       <Alert
                         variant="destructive"
-                        className="animate-in slide-in-from-top-2 border-l-4 border-l-destructive"
+                        className={`animate-in slide-in-from-top-2 ${language === "ar" ? "border-r-4 border-r-destructive" : "border-l-4 border-l-destructive"}`}
                       >
                         <Info className="h-4 w-4" aria-hidden="true" />
                         <AlertDescription className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -1498,6 +1548,7 @@ export default function CustomsCalculator() {
                         <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
                           id="car-search"
+                          autoComplete="off"
                           type="text"
                           placeholder={isLoadingCars ? (t.calculator?.searchPlaceholderLoading ?? "Loading cars...") : (t.calculator?.searchPlaceholder ?? "Search by brand, model, or engine...")}
                           value={searchTerm}
@@ -1528,14 +1579,14 @@ export default function CustomsCalculator() {
                       )}
 
                       {showDropdown && filteredCars.length > 0 && !isLoadingCars && (
-                        <div className="absolute z-50 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-60 overflow-y-auto animate-in fade-in-0 slide-in-from-top-2">
+                        <div className="absolute z-50 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-60 overflow-y-auto animate-in fade-in-0 slide-in-from-top-2 sm:max-h-72">
                           {filteredCars.map((car) => {
                             const carId = `${car.marque}-${car.modele}-${car.numero}`
                             return (
                               <button
                                 key={carId}
                                 type="button"
-                                className="w-full px-3 py-3 text-left hover:bg-muted/50 focus:bg-muted/50 focus:outline-none border-b border-border/50 last:border-b-0 transition-colors duration-150 min-h-[56px]"
+                                className="w-full px-3 py-4 text-left hover:bg-muted/50 focus:bg-muted/50 focus:outline-none border-b border-border/50 last:border-b-0 transition-colors duration-150 min-h-[60px]"
                                 onClick={() => handleCarSelection(carId)}
                               >
                                 <div className="font-medium text-sm">
@@ -1561,8 +1612,8 @@ export default function CustomsCalculator() {
                     <div className="space-y-2">
                       <Label htmlFor="car-age" className="text-sm font-medium flex items-center gap-2">
                         {t.calculator?.selectCarAge ?? "Car Age Category"}
-                        <Tooltip>
-                          <TooltipTrigger asChild>
+                        <Popover>
+                          <PopoverTrigger asChild>
                             <Button
                               variant="ghost"
                               size="sm"
@@ -1571,11 +1622,11 @@ export default function CustomsCalculator() {
                             >
                               <Info className="h-3 w-3 text-muted-foreground" />
                             </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
+                          </PopoverTrigger>
+                          <PopoverContent>
                             <p className="max-w-xs">{t.notes?.ageInfo ?? "Car age affects customs rates. New cars have higher fees but different regulations."}</p>
-                          </TooltipContent>
-                        </Tooltip>
+                          </PopoverContent>
+                        </Popover>
                       </Label>
                       <Select value={carAge} onValueChange={handleAgeSelection}>
                         <SelectTrigger
@@ -1606,13 +1657,13 @@ export default function CustomsCalculator() {
               )}
 
               {entryMode === "manual" && (
-                <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-l-4 border-l-primary/20">
+                <Card className={`shadow-lg hover:shadow-xl transition-all duration-300 ${language === "ar" ? "border-r-4 border-r-primary/20" : "border-l-4 border-l-primary/20"}`}>
                   <CardHeader className="pb-4 sm:pb-6">
                     <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                       <Calculator className="h-5 w-5 text-primary" aria-hidden="true" />
                       {t.calculator?.manualEntry ?? "Manual Entry"}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
+                      <Popover>
+                        <PopoverTrigger asChild>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -1621,13 +1672,13 @@ export default function CustomsCalculator() {
                           >
                             <Info className="h-4 w-4 text-muted-foreground" />
                           </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
+                        </PopoverTrigger>
+                        <PopoverContent>
                           <p className="max-w-xs">
                             {t.calculator?.manualEntryHelp ?? "Use this if your car is not found in the official database or if you want to calculate with a different price."}
                           </p>
-                        </TooltipContent>
-                      </Tooltip>
+                        </PopoverContent>
+                      </Popover>
                     </CardTitle>
                     <CardDescription className="text-sm leading-relaxed">
                       {t.calculator?.manualEntryDescription ?? "Enter your vehicle details manually if not found in the database"}
@@ -1642,7 +1693,10 @@ export default function CustomsCalculator() {
                         <Input
                           id="manual-price"
                           type="number"
-                          placeholder={`${t.calculator?.enterPriceIn ?? "Enter price in"} ${manualCurrency}`}
+                          inputMode="decimal"
+                          enterKeyHint="done"
+                          step="0.01"
+                          placeholder={`${t.calculator?.enterPriceIn ?? "Enter price in"}${manualCurrency === "USD" ? t.currencies?.USD ?? "USD" : t.currencies?.EUR ?? "EUR"}`}
                           value={manualCarData.price}
                           onChange={(e) => setManualCarData((prev) => ({ ...prev, price: e.target.value }))}
                           className="hover:bg-muted/50 transition-colors min-h-[48px] focus:ring-2 focus:ring-primary/20 flex-1"
@@ -1658,13 +1712,13 @@ export default function CustomsCalculator() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <p className="text-xs text-muted-foreground">{t.calculator?.currentRateLabel ?? "Current rate:"} 1 {manualCurrency} = {manualCurrency === "USD" ? exchangeRate : eurExchangeRate} {t.currencies?.DZD ?? "DZD"}</p>
+                      <p className="text-xs text-muted-foreground">{t.calculator?.currentRateLabel ?? "Current rate:"} 1 {manualCurrency === "USD" ? "$" : "€"} = {manualCurrency === "USD" ? exchangeRate : eurExchangeRate} {t.currencies?.DZD ?? "DZD"}</p>
                     </div>
 
                     <Label htmlFor="engine-size" className="text-sm font-medium flex items-center gap-2">
                       {t.calculator?.engineSize ?? "Engine Size (cc)"}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
+                      <Popover>
+                        <PopoverTrigger asChild>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -1673,21 +1727,21 @@ export default function CustomsCalculator() {
                           >
                             <Info className="h-3 w-3 text-muted-foreground" />
                           </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
+                        </PopoverTrigger>
+                        <PopoverContent>
                           <p className="max-w-xs">
                             {t.calculator?.engineSizeInfo ?? "Engine displacement in cubic centimeters affects customs calculations."}
                           </p>
-                        </TooltipContent>
-                      </Tooltip>
+                        </PopoverContent>
+                      </Popover>
                     </Label>
                     <div className="relative">
-                      <Gauge className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10" aria-hidden="true" />
+                      <ChevronDown className="absolute left-3 [dir=rtl]:right-3 [dir=rtl]:left-auto top-3 h-4 w-4 text-muted-foreground z-10 pointer-events-none" aria-hidden="true" />
                       <select
                         id="engine-size"
                         value={manualCarData.engineSize}
                         onChange={(e) => setManualCarData((prev) => ({ ...prev, engineSize: e.target.value }))}
-                        className="w-full pl-10 pr-4 py-3 border border-input bg-background hover:bg-muted/30 focus:bg-background transition-colors min-h-[48px] text-base rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                        className="w-full pl-12 pr-10 py-3 border border-input bg-background hover:bg-muted/30 focus:bg-background transition-colors min-h-[48px] text-base rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 appearance-none"
                       >
                         <option value="">{t.calculator?.selectEngineSize ?? "Select engine size"}</option>
                         <option value="1000">1000cc (1.0L)</option>
@@ -1708,8 +1762,8 @@ export default function CustomsCalculator() {
                     <div className="space-y-2">
                       <Label htmlFor="car-age-manual" className="text-sm font-medium flex items-center gap-2">
                         {t.calculator?.selectCarAge ?? "Car Age Category"}
-                        <Tooltip>
-                          <TooltipTrigger asChild>
+                        <Popover>
+                          <PopoverTrigger asChild>
                             <Button
                               variant="ghost"
                               size="sm"
@@ -1718,11 +1772,11 @@ export default function CustomsCalculator() {
                             >
                               <Info className="h-3 w-3 text-muted-foreground" />
                             </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
+                          </PopoverTrigger>
+                          <PopoverContent>
                             <p className="max-w-xs">{t.notes?.ageInfo ?? "Car age affects customs rates. New cars have higher fees but different regulations."}</p>
-                          </TooltipContent>
-                        </Tooltip>
+                          </PopoverContent>
+                        </Popover>
                       </Label>
                       <Select value={carAge} onValueChange={setCarAge}>
                         <SelectTrigger
@@ -1736,6 +1790,7 @@ export default function CustomsCalculator() {
                           <SelectItem value="less-than-1">{t.calculator?.used ?? "Used"}</SelectItem>
                         </SelectContent>
                       </Select>
+                      
                     </div>
                     {/* Auto-calculation enabled; button removed as requested */}
                   </CardContent>
@@ -2247,14 +2302,14 @@ export default function CustomsCalculator() {
               <div className="space-y-4">
                 {!result && (
                   <>
-                    <Alert className="hover:bg-muted/30 transition-colors border-l-4 border-l-amber-500 bg-amber-50/50 dark:bg-amber-950/20">
+                    <Alert className={`hover:bg-muted/30 transition-colors ${language === "ar" ? "border-r-4 border-r-amber-500" : "border-l-4 border-l-amber-500"} bg-amber-50/50 dark:bg-amber-950/20`}>
                       <Info className="h-4 w-4 text-amber-600" aria-hidden="true" />
                       <AlertDescription className="text-sm leading-relaxed">
                         <strong className="text-amber-800 dark:text-amber-200">{t.notes?.important ?? "Important:"}</strong> {t.notes?.estimatesDisclaimer ?? "These calculations are estimates based on standard rates. Actual fees may vary depending on specific vehicle characteristics, current regulations, and exchange rate fluctuations. Please consult with Algerian customs authorities for official calculations."}
                       </AlertDescription>
                     </Alert>
 
-                    <Card className="hover:shadow-md transition-all duration-300 border-l-4 border-l-blue-500">
+                    <Card className={`hover:shadow-md transition-all duration-300 ${language === "ar" ? "border-r-4 border-r-blue-500" : "border-l-4 border-l-blue-500"}`}>
                       <CardHeader className="pb-4">
                         <CardTitle className="text-base sm:text-lg flex items-center gap-2">
                           <Info className="h-5 w-5 text-blue-600" aria-hidden="true" />
@@ -2295,6 +2350,8 @@ export default function CustomsCalculator() {
           </div>
         </main>
       </TooltipProvider>
+
+      
 
       <footer className="mt-8 sm:mt-12 text-center text-xs sm:text-sm text-muted-foreground px-2 py-4 border-t border-border/50">
         <p className="leading-relaxed">

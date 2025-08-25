@@ -141,6 +141,42 @@ type Dictionary = {
     footerAuthority: string
     footerTail: string
   }
+  toasts?: {
+    carDbLoadedTitle: string
+    carDbLoadedDescPrefix: string
+    vehiclesNoun: string
+    carDbErrorTitle: string
+    carDbErrorDesc: string
+    ratesUpdatedTitle: string
+    ratesUpdatedDesc: string
+    ratesFailedTitle: string
+    ratesFailedDesc: string
+    favAddedTitle: string
+    favRemovedTitle: string
+    favDesc: string
+    linkCopiedTitle: string
+    linkCopiedDesc: string
+    shareFailedTitle: string
+    shareFailedDesc: string
+    calcLoadedTitle: string
+    calcLoadedDesc: string
+    missingInfoTitle: string
+    missingInfoDesc: string
+    invalidPriceTitle: string
+    invalidPriceDesc: string
+    historyClearedTitle: string
+    historyClearedDesc: string
+    entryDeletedTitle: string
+    entryDeletedDesc: string
+    exportedTitle: string
+    exportedDesc: string
+    nothingToExportTitle: string
+    nothingToExportDesc: string
+    printFailedTitle: string
+    printFailedDesc: string
+    linkCopiedToClipboardTitle: string
+    linkCopiedToClipboardDesc: string
+  }
 }
 
 export const dictionaries: Record<SupportedLanguage, Dictionary> = {
@@ -234,7 +270,7 @@ export const dictionaries: Record<SupportedLanguage, Dictionary> = {
       manualEntryDescription: "Enter your vehicle details manually if not found in the database",
       manualEntryHelp: "Use this if your car is not found in the official database or if you want to calculate with a different price.",
       carPriceLabel: "Car Price",
-      enterPriceIn: "Enter price in",
+      enterPriceIn: "Enter price in ",
       currentRateLabel: "Current rate:",
       noCarsFound: "No cars found matching",
     },
@@ -268,6 +304,42 @@ export const dictionaries: Record<SupportedLanguage, Dictionary> = {
       footerLead: "For official information, visit the",
       footerAuthority: "Algerian Customs Authority",
       footerTail: "or contact your local customs office.",
+    },
+    toasts: {
+      carDbLoadedTitle: "Car database loaded",
+      carDbLoadedDescPrefix: "Successfully loaded",
+      vehiclesNoun: "vehicles",
+      carDbErrorTitle: "Error loading car database",
+      carDbErrorDesc: "Please check your connection and try again",
+      ratesUpdatedTitle: "Exchange rates updated",
+      ratesUpdatedDesc: "Latest rates have been fetched successfully",
+      ratesFailedTitle: "Failed to update exchange rates",
+      ratesFailedDesc: "Using default rates. Please try again later.",
+      favAddedTitle: "Added to favorites",
+      favRemovedTitle: "Removed from favorites",
+      favDesc: "Your favorite calculations are saved locally",
+      linkCopiedTitle: "Link copied",
+      linkCopiedDesc: "The URL with your inputs has been copied to the clipboard.",
+      shareFailedTitle: "Share failed",
+      shareFailedDesc: "Please try again or copy manually",
+      calcLoadedTitle: "Calculation loaded",
+      calcLoadedDesc: "Previous calculation has been restored",
+      missingInfoTitle: "Missing information",
+      missingInfoDesc: "Please fill in all required fields",
+      invalidPriceTitle: "Invalid price",
+      invalidPriceDesc: "Please enter a valid car price",
+      historyClearedTitle: "History cleared",
+      historyClearedDesc: "All calculation history has been removed",
+      entryDeletedTitle: "Entry deleted",
+      entryDeletedDesc: "The calculation has been removed from history.",
+      exportedTitle: "Calculation exported",
+      exportedDesc: "Download started successfully",
+      nothingToExportTitle: "Nothing to export",
+      nothingToExportDesc: "Please calculate first.",
+      printFailedTitle: "Failed to open print dialog",
+      printFailedDesc: "Please try again.",
+      linkCopiedToClipboardTitle: "Link copied to clipboard",
+      linkCopiedToClipboardDesc: "Share this URL to let others see your calculation",
     },
   },
   fr: {
@@ -360,7 +432,7 @@ export const dictionaries: Record<SupportedLanguage, Dictionary> = {
       manualEntryDescription: "Saisissez manuellement les détails du véhicule s'il est introuvable dans la base",
       manualEntryHelp: "Utilisez ceci si votre véhicule n'est pas dans la base officielle ou si vous souhaitez calculer avec un prix différent.",
       carPriceLabel: "Prix du véhicule",
-      enterPriceIn: "Entrez le prix en",
+      enterPriceIn: "Entrez le prix en ",
       currentRateLabel: "Taux actuel :",
       noCarsFound: "Aucune voiture trouvée correspondant à",
       
@@ -396,12 +468,48 @@ export const dictionaries: Record<SupportedLanguage, Dictionary> = {
       footerAuthority: "l'administration des douanes algériennes",
       footerTail: "ou contactez votre bureau de douane local.",
     },
+    toasts: {
+      carDbLoadedTitle: "Base de données des voitures chargée",
+      carDbLoadedDescPrefix: "Chargement réussi de",
+      vehiclesNoun: "véhicules",
+      carDbErrorTitle: "Erreur de chargement de la base",
+      carDbErrorDesc: "Veuillez vérifier votre connexion et réessayer",
+      ratesUpdatedTitle: "Taux de change mis à jour",
+      ratesUpdatedDesc: "Les derniers taux ont été récupérés avec succès",
+      ratesFailedTitle: "Échec de mise à jour des taux",
+      ratesFailedDesc: "Utilisation des taux par défaut. Réessayez plus tard.",
+      favAddedTitle: "Ajouté aux favoris",
+      favRemovedTitle: "Retiré des favoris",
+      favDesc: "Vos calculs favoris sont enregistrés localement",
+      linkCopiedTitle: "Lien copié",
+      linkCopiedDesc: "L'URL avec vos entrées a été copiée dans le presse-papiers.",
+      shareFailedTitle: "Échec du partage",
+      shareFailedDesc: "Veuillez réessayer ou copier manuellement",
+      calcLoadedTitle: "Calcul chargé",
+      calcLoadedDesc: "Le calcul précédent a été restauré",
+      missingInfoTitle: "Informations manquantes",
+      missingInfoDesc: "Veuillez remplir tous les champs requis",
+      invalidPriceTitle: "Prix invalide",
+      invalidPriceDesc: "Veuillez saisir un prix valide",
+      historyClearedTitle: "Historique effacé",
+      historyClearedDesc: "Tout l'historique des calculs a été supprimé",
+      entryDeletedTitle: "Entrée supprimée",
+      entryDeletedDesc: "Le calcul a été supprimé de l'historique.",
+      exportedTitle: "Calcul exporté",
+      exportedDesc: "Téléchargement démarré avec succès",
+      nothingToExportTitle: "Rien à exporter",
+      nothingToExportDesc: "Veuillez d'abord effectuer un calcul.",
+      printFailedTitle: "Échec d'ouverture de la boîte d'impression",
+      printFailedDesc: "Veuillez réessayer.",
+      linkCopiedToClipboardTitle: "Lien copié dans le presse-papiers",
+      linkCopiedToClipboardDesc: "Partagez cette URL pour permettre de voir votre calcul",
+    },
   },
   ar: {
     theme: { light: "فاتح", dark: "داكن", system: "النظام" },
     language: { english: "الإنجليزية", french: "الفرنسية", arabic: "العربية", label: "اللغة" },
     actions: { toggleTheme: "تغيير النمط", exportPDF: "تصدير PDF" },
-    currencies: { USD: "دولار أمريكي", EUR: "يورو", DZD: "دج" },
+    currencies: { USD: "دولار", EUR: "يورو", DZD: "دج" },
     common: {
       search: "بحث",
       reset: "إعادة تعيين",
@@ -424,7 +532,7 @@ export const dictionaries: Record<SupportedLanguage, Dictionary> = {
       searchPlaceholderLoading: "جاري تحميل السيارات...",
       selectCarAge: "اختر عمر السيارة",
       selectEngineSize: "اختر سعة المحرك",
-      brandNew: "جديد",
+      brandNew: "جديدة",
       lessThan1: "أقل من سنة",
       lessThan2: "أقل من سنتين",
       lessThan3: "أقل من ثلاث سنوات",
@@ -487,7 +595,7 @@ export const dictionaries: Record<SupportedLanguage, Dictionary> = {
       manualEntryDescription: "أدخل بيانات مركبتك يدويًا إذا لم يتم العثور عليها في قاعدة البيانات",
       manualEntryHelp: "استخدم هذا الخيار إذا لم تكن سيارتك في القاعدة الرسمية أو إذا أردت الحساب بسعر مختلف.",
       carPriceLabel: "سعر السيارة",
-      enterPriceIn: "أدخل السعر بـ",
+      enterPriceIn: "أدخل السعر بال",
       currentRateLabel: "السعر الحالي:",
       noCarsFound: "لا توجد سيارات مطابقة",
     },
@@ -521,6 +629,42 @@ export const dictionaries: Record<SupportedLanguage, Dictionary> = {
       footerLead: "للحصول على معلومات رسمية، قم بزيارة",
       footerAuthority: "المديرية العامة للجمارك الجزائرية",
       footerTail: "أو تواصل مع مكتب الجمارك المحلي.",
+    },
+    toasts: {
+      carDbLoadedTitle: "تم تحميل قاعدة بيانات السيارات",
+      carDbLoadedDescPrefix: "تم تحميل",
+      vehiclesNoun: "سيارات",
+      carDbErrorTitle: "فشل تحميل قاعدة البيانات",
+      carDbErrorDesc: "يرجى التحقق من الاتصال والمحاولة مرة أخرى",
+      ratesUpdatedTitle: "تم تحديث أسعار الصرف",
+      ratesUpdatedDesc: "تم جلب آخر الأسعار بنجاح",
+      ratesFailedTitle: "فشل تحديث أسعار الصرف",
+      ratesFailedDesc: "سيتم استخدام الأسعار الافتراضية. يرجى المحاولة لاحقاً.",
+      favAddedTitle: "تمت الإضافة إلى المفضلة",
+      favRemovedTitle: "تمت الإزالة من المفضلة",
+      favDesc: "يتم حفظ حساباتك المفضلة محلياً",
+      linkCopiedTitle: "تم نسخ الرابط",
+      linkCopiedDesc: "تم نسخ الرابط مع مدخلاتك إلى الحافظة.",
+      shareFailedTitle: "فشل المشاركة",
+      shareFailedDesc: "يرجى المحاولة مرة أخرى أو النسخ يدوياً",
+      calcLoadedTitle: "تم تحميل الحساب",
+      calcLoadedDesc: "تمت استعادة الحساب السابق",
+      missingInfoTitle: "معلومات ناقصة",
+      missingInfoDesc: "يرجى ملء جميع الحقول المطلوبة",
+      invalidPriceTitle: "سعر غير صالح",
+      invalidPriceDesc: "يرجى إدخال سعر صالح",
+      historyClearedTitle: "تم مسح السجل",
+      historyClearedDesc: "تم حذف جميع سجلات الحساب",
+      entryDeletedTitle: "تم حذف الإدخال",
+      entryDeletedDesc: "تمت إزالة الحساب من السجل.",
+      exportedTitle: "تم تصدير الحساب",
+      exportedDesc: "تم بدء التنزيل بنجاح",
+      nothingToExportTitle: "لا يوجد ما يتم تصديره",
+      nothingToExportDesc: "يرجى الحساب أولاً.",
+      printFailedTitle: "فشل فتح نافذة الطباعة",
+      printFailedDesc: "يرجى المحاولة مرة أخرى.",
+      linkCopiedToClipboardTitle: "تم نسخ الرابط إلى الحافظة",
+      linkCopiedToClipboardDesc: "شارك هذا الرابط ليتمكن الآخرون من رؤية حسابك",
     },
   },
 }
