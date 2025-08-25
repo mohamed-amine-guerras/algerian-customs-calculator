@@ -120,11 +120,17 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-inter), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
   }
 
   /* Smooth scrolling for better mobile navigation */
   html {
     scroll-behavior: smooth;
+  }
+
+  /* Use Arabic font when lang="ar" is set on <html> via LanguageProvider */
+  html[lang="ar"] body {
+    font-family: var(--font-arabic), var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Noto Naskh Arabic", "Noto Kufi Arabic", "Segoe UI", "Tahoma", sans-serif;
   }
 
   /* Better touch targets for mobile */

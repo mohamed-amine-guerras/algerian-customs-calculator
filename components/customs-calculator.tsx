@@ -38,6 +38,8 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { LanguageToggle } from "@/components/language-toggle"
+import { useLanguage } from "@/components/language-provider"
 
 import { useRouter, useSearchParams } from "next/navigation"
 
@@ -165,6 +167,7 @@ function calculateRelevanceScore(car: CarData, searchTerm: string): number {
 export default function CustomsCalculator() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { t, formatNumber, formatTime, language, formatCurrency } = useLanguage()
 
   const [carPrice, setCarPrice] = useState("")
   const [carType, setCarType] = useState("new") // Set "new" as default car type for brand new vehicles
@@ -940,14 +943,6 @@ export default function CustomsCalculator() {
     })
   }
 
-  const formatCurrency = (amount: number, currency = selectedCarCurrency || "USD") => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: currency,
-      minimumFractionDigits: 2,
-    }).format(amount)
-  }
-
   const formatDZD = (amount: number) => {
     const currentRate = selectedCarCurrency === "EUR" ? eurExchangeRate : exchangeRate
     const dzdAmount = amount * Number.parseFloat(currentRate || "270")
@@ -1143,7 +1138,7 @@ export default function CustomsCalculator() {
 
       doc.open()
       doc.write(`<!doctype html>
-<html class="${docClass}">
+<html class="${docClass}" lang="${language}" dir="${language === "ar" ? "rtl" : "ltr"}">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -1259,29 +1254,29 @@ export default function CustomsCalculator() {
                   <Car className="h-6 w-6 sm:h-8 sm:w-8 text-primary" aria-hidden="true" />
                 </div>
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground leading-tight">
-                  Car Import Customs Calculator
+                  {t.calculator?.appTitle ?? "Car Import Customs Calculator"}
                 </h1>
               </div>
-              <div className="flex-1 flex justify-end">
+              <div className="flex-1 flex justify-end gap-2">
+                <LanguageToggle />
                 <ThemeToggle />
               </div>
             </div>
             <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-2 leading-relaxed">
-              Calculate customs fees and taxes for importing vehicles into Algeria. Get accurate estimates based on
-              current regulations and exchange rates.
+              {t.calculator?.tagline ?? "Calculate customs fees and taxes for importing vehicles into Algeria. Get accurate estimates based on current regulations and exchange rates."}
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
-                <span className="font-medium">Current Rates:</span>
-                <span>1 USD = {exchangeRate} DZD</span>
+                <span className="font-medium">{t.calculator?.currentRates ?? "Current Rates:"}</span>
+                <span>1 $ = {formatNumber(Number(exchangeRate))} {t.currencies?.DZD ?? "DZD"}</span>
                 <span>•</span>
-                <span>1 EUR = {eurExchangeRate} DZD</span>
+                <span>1 € = {formatNumber(Number(eurExchangeRate))} {t.currencies?.DZD ?? "DZD"}</span>
               </div>
               {lastUpdated && (
                 <div className="flex items-center gap-1 text-xs">
                   <Clock className="h-3 w-3" />
-                  <span>Updated: {lastUpdated.toLocaleTimeString()}</span>
+                  <span>{t.common?.updated ?? "Updated:"} {formatTime(lastUpdated)}</span>
                 </div>
               )}
             </div>
@@ -1294,7 +1289,7 @@ export default function CustomsCalculator() {
                   className="flex items-center gap-2 min-h-[44px] px-4 sm:px-6"
                 >
                   <Search className="h-4 w-4" />
-                  Search Database
+                  {t.calculator?.searchDatabase ?? "Search Database"}
                 </Button>
                 <Button
                   variant={entryMode === "manual" ? "default" : "ghost"}
@@ -1306,7 +1301,7 @@ export default function CustomsCalculator() {
                   className="flex items-center gap-2 min-h-[44px] px-4 sm:px-6"
                 >
                   <Calculator className="h-4 w-4" />
-                  Manual Entry
+                  {t.calculator?.manualEntry ?? "Manual Entry"}
                 </Button>
                 <Button
                   variant="outline"
@@ -1314,7 +1309,7 @@ export default function CustomsCalculator() {
                   className="flex items-center gap-2 min-h-[44px] px-4 sm:px-6 bg-transparent"
                 >
                   <RotateCcw className="h-4 w-4" />
-                  Reset
+                  {t.common?.reset ?? "Reset"}
                 </Button>
               </div>
 
@@ -1327,20 +1322,20 @@ export default function CustomsCalculator() {
                     aria-label={`View calculation history (${calculationHistory.length} items)`}
                   >
                     <History className="h-4 w-4" aria-hidden="true" />
-                    <span className="hidden xs:inline">History</span> ({calculationHistory.length})
+                    <span className="hidden xs:inline">{t.common?.history ?? "History"}</span> ({calculationHistory.length})
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="mx-2 sm:mx-4 max-w-[calc(100vw-1rem)] sm:max-w-4xl max-h-[85vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle className="text-lg sm:text-xl">Calculation History</DialogTitle>
-                    <DialogDescription className="text-sm">Your recent customs fee calculations</DialogDescription>
+                    <DialogTitle className="text-lg sm:text-xl">{t.calculator?.calculationHistory ?? "Calculation History"}</DialogTitle>
+                    <DialogDescription className="text-sm">{t.calculator?.recentCalculations ?? "Your recent customs fee calculations"}</DialogDescription>
                   </DialogHeader>
                   <div className="space-y-3 sm:space-y-4">
                     {calculationHistory.length === 0 ? (
                       <div className="text-center text-muted-foreground py-6 sm:py-8">
                         <History className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 opacity-50" />
-                        <p className="text-sm sm:text-base">No calculations yet</p>
-                        <p className="text-xs sm:text-sm">Your calculation history will appear here</p>
+                        <p className="text-sm sm:text-base">{t.calculator?.noCalculationsYet ?? "No calculations yet"}</p>
+                        <p className="text-xs sm:text-sm">{t.calculator?.historyWillAppear ?? "Your calculation history will appear here"}</p>
                       </div>
                     ) : (
                       <>
@@ -1352,7 +1347,7 @@ export default function CustomsCalculator() {
                             className="gap-2 bg-transparent hover:bg-destructive/10 hover:text-destructive transition-colors min-h-[44px]"
                           >
                             <Trash2 className="h-4 w-4" />
-                            <span className="hidden xs:inline">Clear All</span>
+                            <span className="hidden xs:inline">{t.common?.clearAll ?? "Clear All"}</span>
                           </Button>
                         </div>
                         {calculationHistory.map((calc) => (
@@ -1380,12 +1375,12 @@ export default function CustomsCalculator() {
                                   </Button>
                                 </div>
                                 <div className="text-xs sm:text-sm text-muted-foreground">
-                                  Price: {Number(calc.carDetails.price).toLocaleString()} {calc.carDetails.currency} • Total:{" "}
+                                  Price: {formatNumber(Number(calc.carDetails.price))} {calc.carDetails.currency === "USD" ? "$" : calc.carDetails.currency === "EUR" ? "€" : (t.currencies?.DZD ?? "DZD")} • Total:{" "}
                                   <span className="font-semibold text-primary">
-                                    {calc.result.totalFee.toLocaleString()} DZD
+                                    {formatNumber(calc.result.totalFee)} DZD
                                   </span>
                                 </div>
-                                <div className="text-xs text-muted-foreground">{calc.timestamp.toLocaleString()}</div>
+                                <div className="text-xs text-muted-foreground">{formatTime(calc.timestamp as unknown as Date)}</div>
                               </div>
                               <div className="flex gap-2 flex-wrap">
                                 <Button
@@ -1395,7 +1390,7 @@ export default function CustomsCalculator() {
                                   className="gap-2 hover:bg-primary/10 transition-colors min-h-[44px] flex-1 sm:flex-none"
                                 >
                                   <RefreshCw className="h-4 w-4" />
-                                  <span className="hidden xs:inline">Load</span>
+                                  <span className="hidden xs:inline">{t.common?.load ?? "Load"}</span>
                                 </Button>
                                 <Button
                                   variant="outline"
@@ -1409,7 +1404,7 @@ export default function CustomsCalculator() {
                                   ) : (
                                     <Share2 className="h-4 w-4" />
                                   )}
-                                  <span className="hidden xs:inline">Share</span>
+                                  <span className="hidden xs:inline">{t.common?.share ?? "Share"}</span>
                                 </Button>
                                 <Button
                                   variant="outline"
@@ -1418,7 +1413,7 @@ export default function CustomsCalculator() {
                                   className="gap-2 hover:bg-destructive/10 hover:text-destructive transition-colors min-h-[44px] flex-1 sm:flex-none"
                                 >
                                   <Trash2 className="h-4 w-4" />
-                                  <span className="hidden xs:inline">Delete</span>
+                                  <span className="hidden xs:inline">{t.common?.delete ?? "Delete"}</span>
                                 </Button>
                               </div>
                             </div>
@@ -1442,28 +1437,27 @@ export default function CustomsCalculator() {
                   <CardHeader className="pb-4 sm:pb-6">
                     <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                       <Search className="h-5 w-5 text-primary" aria-hidden="true" />
-                      Search Official Car Database
+                      {t.calculator?.searchDatabaseTitle ?? "Search Official Car Database"}
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
                             variant="ghost"
                             size="sm"
                             className="h-auto p-1"
-                            aria-label="Information about car database"
+                            aria-label={t.aria?.dbInfo ?? "Information about car database"}
                           >
                             <Info className="h-4 w-4 text-muted-foreground" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="max-w-xs">
-                            Search from the official Algerian customs reference database with pre-approved prices and
-                            specifications.
+                            {t.calculator?.searchDatabaseDescription ?? "Search from the official Algerian customs reference database with pre-approved prices and"} specifications.
                           </p>
                         </TooltipContent>
                       </Tooltip>
                     </CardTitle>
                     <CardDescription className="text-sm leading-relaxed">
-                      Find your car from the official Algerian customs reference list
+                      {t.calculator?.findFromList ?? "Find your car from the official Algerian customs reference list"}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -1481,15 +1475,15 @@ export default function CustomsCalculator() {
                             onClick={retryFetchCarData}
                             disabled={isRetrying}
                             className="bg-transparent hover:bg-destructive/10 transition-colors min-h-[44px] w-full sm:w-auto"
-                            aria-label="Retry loading car data"
+                            aria-label={t.aria?.retryCars ?? "Retry loading car data"}
                           >
                             {isRetrying ? (
                               <>
                                 <RefreshCw className="h-4 w-4 animate-spin mr-1" aria-hidden="true" />
-                                <span>Retrying...</span>
+                                <span>{t.common?.retrying ?? "Retrying..."}</span>
                               </>
                             ) : (
-                              "Retry"
+                              t.common?.retry ?? "Retry"
                             )}
                           </Button>
                         </AlertDescription>
@@ -1498,14 +1492,14 @@ export default function CustomsCalculator() {
 
                     <div className="space-y-2 relative" ref={dropdownRef}>
                       <Label htmlFor="car-search" className="text-sm font-medium">
-                        Search Car Model
+                        {t.calculator?.searchCarModel ?? "Search Car Model"}
                       </Label>
                       <div className="relative">
                         <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
                           id="car-search"
                           type="text"
-                          placeholder={isLoadingCars ? "Loading cars..." : "Search by brand, model, or engine..."}
+                          placeholder={isLoadingCars ? (t.calculator?.searchPlaceholderLoading ?? "Loading cars...") : (t.calculator?.searchPlaceholder ?? "Search by brand, model, or engine...")}
                           value={searchTerm}
                           onChange={(e) => {
                             setSearchTerm(e.target.value)
@@ -1559,14 +1553,14 @@ export default function CustomsCalculator() {
 
                       {showDropdown && searchTerm && filteredCars.length === 0 && !isLoadingCars && (
                         <div className="absolute z-50 w-full mt-1 bg-background border border-border rounded-md shadow-lg p-3 animate-in fade-in-0">
-                          <p className="text-sm text-muted-foreground">No cars found matching "{searchTerm}"</p>
+                          <p className="text-sm text-muted-foreground">{t.calculator?.noCarsFound ?? "No cars found matching"} "{searchTerm}"</p>
                         </div>
                       )}
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="car-age" className="text-sm font-medium flex items-center gap-2">
-                        Car Age Category
+                        {t.calculator?.selectCarAge ?? "Car Age Category"}
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
@@ -1579,24 +1573,22 @@ export default function CustomsCalculator() {
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p className="max-w-xs">
-                              Car age affects customs rates. New cars have higher fees but different regulations.
-                            </p>
+                            <p className="max-w-xs">{t.notes?.ageInfo ?? "Car age affects customs rates. New cars have higher fees but different regulations."}</p>
                           </TooltipContent>
                         </Tooltip>
                       </Label>
                       <Select value={carAge} onValueChange={handleAgeSelection}>
                         <SelectTrigger
                           className="hover:bg-muted/50 transition-colors min-h-[48px] focus:ring-2 focus:ring-primary/20"
-                          aria-label="Select car age category"
+                          aria-label={t.aria?.ageSelect ?? "Select car age category"}
                         >
-                          <SelectValue placeholder="Select car age" />
+                          <SelectValue placeholder={t.calculator?.selectCarAge ?? "Select car age"} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="new">Brand New</SelectItem>
-                          <SelectItem value="less-than-1">Less than 1 year</SelectItem>
-                          <SelectItem value="less-than-2">Less than 2 years</SelectItem>
-                          <SelectItem value="less-than-3">Less than 3 years</SelectItem>
+                          <SelectItem value="new">{t.calculator?.brandNew ?? "Brand New"}</SelectItem>
+                          <SelectItem value="less-than-1">{t.calculator?.lessThan1 ?? "Less than 1 year"}</SelectItem>
+                          <SelectItem value="less-than-2">{t.calculator?.lessThan2 ?? "Less than 2 years"}</SelectItem>
+                          <SelectItem value="less-than-3">{t.calculator?.lessThan3 ?? "Less than 3 years"}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1605,7 +1597,7 @@ export default function CustomsCalculator() {
                       <Alert className="animate-in slide-in-from-left-2">
                         <Info className="h-4 w-4" />
                         <AlertDescription className="text-sm">
-                          Using official Algerian customs reference price for the selected vehicle.
+                          {t.calculator?.usingReferencePrice ?? "Using official Algerian customs reference price for the selected vehicle."}
                         </AlertDescription>
                       </Alert>
                     )}
@@ -1618,77 +1610,73 @@ export default function CustomsCalculator() {
                   <CardHeader className="pb-4 sm:pb-6">
                     <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                       <Calculator className="h-5 w-5 text-primary" aria-hidden="true" />
-                      Manual Entry
+                      {t.calculator?.manualEntry ?? "Manual Entry"}
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
                             variant="ghost"
                             size="sm"
                             className="h-auto p-1"
-                            aria-label="Information about manual entry"
+                            aria-label={t.aria?.manualInfo ?? "Information about manual entry"}
                           >
                             <Info className="h-4 w-4 text-muted-foreground" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="max-w-xs">
-                            Use this if your car is not found in the official database or if you want to calculate with
-                            a different price.
+                            {t.calculator?.manualEntryHelp ?? "Use this if your car is not found in the official database or if you want to calculate with a different price."}
                           </p>
                         </TooltipContent>
                       </Tooltip>
                     </CardTitle>
                     <CardDescription className="text-sm leading-relaxed">
-                      Enter your vehicle details manually if not found in the database
+                      {t.calculator?.manualEntryDescription ?? "Enter your vehicle details manually if not found in the database"}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="manual-price" className="text-sm font-medium">
-                        Car Price
+                        {t.calculator?.carPriceLabel ?? "Car Price"}
                       </Label>
                       <div className="flex items-center gap-2">
                         <Input
                           id="manual-price"
                           type="number"
-                          placeholder={`Enter price in ${manualCurrency}`}
+                          placeholder={`${t.calculator?.enterPriceIn ?? "Enter price in"} ${manualCurrency}`}
                           value={manualCarData.price}
                           onChange={(e) => setManualCarData((prev) => ({ ...prev, price: e.target.value }))}
                           className="hover:bg-muted/50 transition-colors min-h-[48px] focus:ring-2 focus:ring-primary/20 flex-1"
                           aria-label={`Car price in ${manualCurrency}`}
                         />
                         <Select value={manualCurrency} onValueChange={setManualCurrency}>
-                          <SelectTrigger className="w-20 h-8 text-sm">
+                          <SelectTrigger className="w-16 h-8 text-base font-bold">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="USD">USD</SelectItem>
-                            <SelectItem value="EUR">EUR</SelectItem>
+                            <SelectItem value="USD">$</SelectItem>
+                            <SelectItem value="EUR">€</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        Current rate: 1 {manualCurrency} = {manualCurrency === "USD" ? exchangeRate : eurExchangeRate}{" "}
-                        DZD
-                      </p>
+                      <p className="text-xs text-muted-foreground">{t.calculator?.currentRateLabel ?? "Current rate:"} 1 {manualCurrency} = {manualCurrency === "USD" ? exchangeRate : eurExchangeRate} {t.currencies?.DZD ?? "DZD"}</p>
                     </div>
 
                     <Label htmlFor="engine-size" className="text-sm font-medium flex items-center gap-2">
-                      Engine Size (cc)
+                      {t.calculator?.engineSize ?? "Engine Size (cc)"}
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
                             variant="ghost"
                             size="sm"
                             className="h-auto p-1"
-                            aria-label="Information about engine size"
+                            aria-label={t.aria?.engineInfo ?? "Information about engine size"}
                           >
                             <Info className="h-3 w-3 text-muted-foreground" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="max-w-xs">
-                            Engine displacement in cubic centimeters affects customs calculations.
+                            {t.calculator?.engineSizeInfo ?? "Engine displacement in cubic centimeters affects customs calculations."}
                           </p>
                         </TooltipContent>
                       </Tooltip>
@@ -1701,7 +1689,7 @@ export default function CustomsCalculator() {
                         onChange={(e) => setManualCarData((prev) => ({ ...prev, engineSize: e.target.value }))}
                         className="w-full pl-10 pr-4 py-3 border border-input bg-background hover:bg-muted/30 focus:bg-background transition-colors min-h-[48px] text-base rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                       >
-                        <option value="">Select engine size</option>
+                        <option value="">{t.calculator?.selectEngineSize ?? "Select engine size"}</option>
                         <option value="1000">1000cc (1.0L)</option>
                         <option value="1200">1200cc (1.2L)</option>
                         <option value="1400">1400cc (1.4L)</option>
@@ -1719,35 +1707,33 @@ export default function CustomsCalculator() {
 
                     <div className="space-y-2">
                       <Label htmlFor="car-age-manual" className="text-sm font-medium flex items-center gap-2">
-                        Car Age Category
+                        {t.calculator?.selectCarAge ?? "Car Age Category"}
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
                               variant="ghost"
                               size="sm"
                               className="h-auto p-1"
-                              aria-label="Information about car age categories"
+                              aria-label={t.aria?.ageInfo ?? "Information about car age categories"}
                             >
                               <Info className="h-3 w-3 text-muted-foreground" />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p className="max-w-xs">
-                              Car age affects customs rates. New cars have higher fees but different regulations.
-                            </p>
+                            <p className="max-w-xs">{t.notes?.ageInfo ?? "Car age affects customs rates. New cars have higher fees but different regulations."}</p>
                           </TooltipContent>
                         </Tooltip>
                       </Label>
                       <Select value={carAge} onValueChange={setCarAge}>
                         <SelectTrigger
                           className="hover:bg-muted/50 transition-colors min-h-[48px] focus:ring-2 focus:ring-primary/20"
-                          aria-label="Select car age category"
+                          aria-label={t.aria?.ageSelect ?? "Select car age category"}
                         >
-                          <SelectValue placeholder="Select car age" />
+                          <SelectValue placeholder={t.calculator?.selectCarAge ?? "Select car age"} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="new">Brand New</SelectItem>
-                          <SelectItem value="less-than-1">Used</SelectItem>
+                          <SelectItem value="new">{t.calculator?.brandNew ?? "Brand New"}</SelectItem>
+                          <SelectItem value="less-than-1">{t.calculator?.used ?? "Used"}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1770,7 +1756,7 @@ export default function CustomsCalculator() {
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-lg font-bold text-primary flex items-center gap-2">
                         <Car className="h-5 w-5" />
-                        {entryMode === "search" && selectedCarDetails ? "Selected Vehicle" : "Calculation Results"}
+                        {entryMode === "search" && selectedCarDetails ? (t.calculator?.selectedVehicle ?? "Selected Vehicle") : (t.calculator?.calculationResults ?? "Calculation Results")}
                       </CardTitle>
                       {result && (
                         <Dialog open={showDetailedBreakdown} onOpenChange={setShowDetailedBreakdown}>
@@ -1779,64 +1765,62 @@ export default function CustomsCalculator() {
                               variant="outline"
                               size="sm"
                               className="hover:bg-muted/50 transition-colors bg-transparent"
-                              aria-label="View detailed cost breakdown"
+                              aria-label={t.aria?.viewBreakdown ?? "View detailed cost breakdown"}
                             >
                               <Info className="mr-1 h-3 w-3" aria-hidden="true" />
-                              Details
+                              {t.calculator?.details ?? "Details"}
                             </Button>
                           </DialogTrigger>
                           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                             <DialogHeader>
                               <DialogTitle className="flex items-center gap-2" tabIndex={-1}>
                                 <Calculator className="h-5 w-5" />
-                                Detailed Cost Breakdown
+                                {t.calculator?.detailedBreakdown ?? "Detailed Cost Breakdown"}
                               </DialogTitle>
                             </DialogHeader>
                             <div className="space-y-4">
                               {/* Vehicle Information */}
                               <div className="bg-muted/30 rounded-lg p-3">
-                                <h4 className="font-semibold text-sm mb-2 text-muted-foreground">
-                                  Vehicle Information
-                                </h4>
+                                <h4 className="font-semibold text-sm mb-2 text-muted-foreground">{t.calculator?.vehicleInfo ?? "Vehicle Information"}</h4>
                                 <div className="grid grid-cols-2 gap-3 text-sm">
                                   <div className="flex justify-between">
-                                    <span>Car Price:</span>
+                                    <span>{t.calculator?.carPrice ?? "Car Price:"}</span>
                                     <span className="font-semibold">
-                                      {new Intl.NumberFormat("en-US").format(
+                                      {formatNumber(
                                         entryMode === "search" && selectedCarDetails
                                           ? Number.parseFloat(carPrice)
                                           : Number.parseFloat(manualCarData.price),
                                       )}{" "}
-                                      {result.currency}
+                                      {result.currency === "USD" ? "$" : result.currency === "EUR" ? "€" : (t.currencies?.DZD ?? "DZD")}
                                     </span>
                                   </div>
                                   <div className="flex justify-between">
-                                    <span>Exchange Rate:</span>
-                                    <span className="font-semibold">{result.exchangeRate.toFixed(2)} DZD</span>
+                                    <span>{t.calculator?.exchangeRate ?? "Exchange Rate:"}</span>
+                                    <span className="font-semibold">1 {result.currency === "USD" ? "$" : result.currency === "EUR" ? "€" : (t.currencies?.DZD ?? "DZD")} = {result.exchangeRate.toFixed(2)} {t.currencies?.DZD ?? "DZD"}</span>
                                   </div>
                                   <div className="flex justify-between">
-                                    <span>Age Category:</span>
+                                    <span>{t.calculator?.ageCategory ?? "Age Category:"}</span>
                                     <span className="font-semibold">
                                       {result.ageCategory === "new"
-                                        ? "Brand New"
+                                        ? (t.calculator?.brandNew ?? "Brand New")
                                         : result.ageCategory === "less-than-1"
-                                          ? "Less than 1 year"
+                                          ? (t.calculator?.lessThan1 ?? "Less than 1 year")
                                           : result.ageCategory === "less-than-2"
-                                            ? "Less than 2 years"
+                                            ? (t.calculator?.lessThan2 ?? "Less than 2 years")
                                             : result.ageCategory === "less-than-3"
-                                              ? "Less than 3 years"
-                                              : "Used"}
+                                              ? (t.calculator?.lessThan3 ?? "Less than 3 years")
+                                              : (t.calculator?.used ?? "Used")}
                                       <span className="text-xs text-muted-foreground ml-1">
-                                        ({result.ageCategory === "new" ? "New Car Rates" : "Used Car Rates"})
+                                        ({result.ageCategory === "new" ? (t.calculator?.newCarRatesLabel ?? "New Car Rates") : (t.calculator?.usedCarRatesLabel ?? "Used Car Rates")})
                                       </span>
                                     </span>
                                   </div>
                                   <div className="flex justify-between">
-                                    <span>Engine Size:</span>
+                                    <span>{t.calculator?.engineSize ?? "Engine Size:"}</span>
                                     <span className="font-semibold">
                                       {result.engineSizeCC}cc
                                       <span className="text-xs text-muted-foreground ml-1">
-                                        ({result.engineSizeCC <= 1800 ? "≤1.8L" : ">1.8L"})
+                                        ({result.engineSizeCC <= 1800 ? (t.calculator?.engineLeq18 ?? "≤1.8L Engine") : (t.calculator?.engineGt18 ?? ">1.8L Engine")})
                                       </span>
                                     </span>
                                   </div>
@@ -1844,19 +1828,16 @@ export default function CustomsCalculator() {
                               </div>
 
                               <div className="bg-purple-50 dark:bg-purple-950/20 rounded-lg p-3">
-                                <h4 className="font-semibold text-sm mb-2 text-purple-700 dark:text-purple-400">
-                                  Applied Duty Rate
-                                </h4>
+                                <h4 className="font-semibold text-sm mb-2 text-purple-700 dark:text-purple-400">{t.calculator?.dutyRateApplied ?? "Applied Duty Rate"}</h4>
                                 <div className="space-y-2 text-sm">
                                   <div className="flex justify-between">
-                                    <span>Vehicle Classification:</span>
+                                    <span>{t.calculator?.vehicleClass ?? "Vehicle Classification:"}</span>
                                     <span className="font-semibold">
-                                      {result.ageCategory === "new" ? "New Car" : "Used Car"} +{" "}
-                                      {result.engineSizeCC <= 1800 ? "≤1.8L Engine" : ">1.8L Engine"}
+                                      {result.ageCategory === "new" ? (t.calculator?.newCarLabel ?? "New Car") : (t.calculator?.usedCarLabel ?? "Used Car")} + {result.engineSizeCC <= 1800 ? (t.calculator?.engineLeq18 ?? "≤1.8L Engine") : (t.calculator?.engineGt18 ?? ">1.8L Engine")}
                                     </span>
                                   </div>
                                   <div className="flex justify-between">
-                                    <span>Duty Rate Applied:</span>
+                                    <span>{t.calculator?.dutyRateApplied ?? "Duty Rate Applied:"}</span>
                                     <span className="font-semibold text-purple-700 dark:text-purple-400">
                                       {result.ageCategory === "new"
                                         ? result.engineSizeCC <= 1800
@@ -1868,32 +1849,30 @@ export default function CustomsCalculator() {
                                     </span>
                                   </div>
                                   <div className="text-xs text-muted-foreground bg-muted/20 rounded p-2">
-                                    <strong>Rate Structure:</strong>
-                                    <br />• New cars ≤1.8L: 40% | New cars &gt;1.8L: 141%
-                                    <br />• Used cars ≤1.8L: 20% | Used cars &gt;1.8L: 121%
+                                    <strong>{t.calculator?.rateStructure ?? "Rate Structure:"}</strong>
+                                    <br />• {t.notes?.rateStructureNew ?? "New cars ≤1.8L: 40% | New cars >1.8L: 141%"}
+                                    <br />• {t.notes?.rateStructureUsed ?? "Used cars ≤1.8L: 20% | Used cars >1.8L: 121%"}
                                   </div>
                                 </div>
                               </div>
 
                               {/* Customs Calculation Breakdown */}
                               <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-3">
-                                <h4 className="font-semibold text-sm mb-2 text-blue-700 dark:text-blue-400">
-                                  Customs Fee Calculation
-                                </h4>
+                                <h4 className="font-semibold text-sm mb-2 text-blue-700 dark:text-blue-400">{t.calculator?.customsFee ?? "Customs Fee Calculation"}</h4>
                                 <div className="space-y-2 text-sm">
                                   <div className="flex justify-between">
-                                    <span>Car Price:</span>
+                                    <span>{t.calculator?.carPrice ?? "Car Price:"}</span>
                                     <span className="font-semibold">
-                                      {new Intl.NumberFormat("en-US").format(
+                                      {formatNumber(
                                         entryMode === "search" && selectedCarDetails
                                           ? Number.parseFloat(carPrice)
                                           : Number.parseFloat(manualCarData.price),
                                       )}{" "}
-                                      {result.currency}
+                                      {result.currency === "USD" ? "$" : result.currency === "EUR" ? "€" : (t.currencies?.DZD ?? "DZD")}
                                     </span>
                                   </div>
                                   <div className="flex justify-between">
-                                    <span>Duty Rate Applied:</span>
+                                    <span>{t.calculator?.dutyRateApplied ?? "Duty Rate Applied:"}</span>
                                     <span className="font-semibold">
                                       {result.breakdown.typeFactor === 0.4
                                         ? "40%"
@@ -1905,68 +1884,53 @@ export default function CustomsCalculator() {
                                     </span>
                                   </div>
                                   <div className="border-t border-blue-200 dark:border-blue-800 pt-2 flex justify-between font-semibold">
-                                    <span>Customs Fee:</span>
-                                    <span>
-                                      {result.customsFee.toLocaleString()} {result.currency}
-                                    </span>
+                                    <span>{t.calculator?.customsFee ?? "Customs Fee:"}</span>
+                                    <span>{formatNumber(result.customsFee)} {result.currency === "USD" ? "$" : result.currency === "EUR" ? "€" : (t.currencies?.DZD ?? "DZD")}</span>
                                   </div>
                                   <div className="flex justify-between text-muted-foreground">
-                                    <span>In DZD:</span>
-                                    <span className="font-semibold">
-                                      {Math.round(result.customsFee * result.exchangeRate).toLocaleString()} DZD
-                                    </span>
+                                    <span>{t.calculator?.inDzd ?? "In DZD:"}</span>
+                                    <span className="font-semibold">{Math.round(result.customsFee * result.exchangeRate).toLocaleString()} {t.currencies?.DZD ?? "DZD"}</span>
                                   </div>
                                 </div>
                               </div>
 
                               {/* Additional Fees */}
                               <div className="bg-orange-50 dark:bg-orange-950/20 rounded-lg p-3">
-                                <h4 className="font-semibold text-sm mb-2 text-orange-700 dark:text-orange-400">
-                                  Additional Fees
-                                </h4>
+                                <h4 className="font-semibold text-sm mb-2 text-orange-700 dark:text-orange-400">{t.calculator?.additionalFees ?? "Additional Fees"}</h4>
                                 <div className="space-y-2 text-sm">
                                   <div className="flex justify-between">
-                                    <span>Port Fee ({result.ageCategory === "new" ? "New Car" : "Used Car"}):</span>
-                                    <span className="font-semibold">
-                                      {result.ageCategory === "new" ? "300,000" : "150,000"} DZD
-                                    </span>
+                                    <span>{t.calculator?.portFee ?? "Port Fee"}: ({result.ageCategory === "new" ? (t.calculator?.newCarLabel ?? "New Car") : (t.calculator?.usedCarLabel ?? "Used Car")}):</span>
+                                    <span className="font-semibold">{result.ageCategory === "new" ? "300,000" : "150,000"} {t.currencies?.DZD ?? "DZD"}</span>
                                   </div>
                                 </div>
                               </div>
 
                               {/* Total Summary */}
                               <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-                                <h4 className="font-semibold text-sm mb-3 text-green-700 dark:text-green-400">
-                                  Total Import Cost Summary
-                                </h4>
+                                <h4 className="font-semibold text-sm mb-3 text-green-700 dark:text-green-400">{t.calculator?.totalCost ?? "Total Import Cost Summary"}</h4>
                                 <div className="space-y-2 text-sm">
                                   <div className="flex justify-between">
-                                    <span>Customs Fee (DZD):</span>
-                                    <span className="font-semibold">
-                                      {Math.round(result.customsFee * result.exchangeRate).toLocaleString()} DZD
-                                    </span>
+                                    <span>{t.calculator?.customsFeeDzd ?? "Customs Fee (DZD):"}</span>
+                                    <span className="font-semibold">{formatNumber(Math.round(result.customsFee * result.exchangeRate))} {t.currencies?.DZD ?? "DZD"}</span>
                                   </div>
                                   <div className="flex justify-between">
-                                    <span>Port Fee:</span>
-                                    <span className="font-semibold">
-                                      {result.ageCategory === "new" ? "300,000" : "150,000"} DZD
-                                    </span>
+                                    <span>{t.calculator?.portFee ?? "Port Fee"}:</span>
+                                    <span className="font-semibold">{result.ageCategory === "new" ? "300,000" : "150,000"} {t.currencies?.DZD ?? "DZD"}</span>
                                   </div>
                                   <div className="border-t border-green-200 dark:border-green-800 pt-2 flex justify-between text-lg font-bold text-green-700 dark:text-green-400">
-                                    <span>Total Cost:</span>
-                                    <span>{result.totalFee.toLocaleString()} DZD</span>
+                                    <span>{t.calculator?.totalCost ?? "Total Cost:"}</span>
+                                    <span>{result.totalFee.toLocaleString()} {t.currencies?.DZD ?? "DZD"}</span>
                                   </div>
                                 </div>
                               </div>
 
                               <div className="bg-muted/20 rounded-lg p-3">
-                                <h4 className="font-semibold text-sm mb-2 text-muted-foreground">Calculation Notes</h4>
+                                <h4 className="font-semibold text-sm mb-2 text-muted-foreground">{t.notes?.calculationNotes ?? "Calculation Notes"}</h4>
                                 <ul className="text-xs text-muted-foreground space-y-1">
-                                  <li>• Exchange rates are updated automatically from official sources</li>
-                                  <li>• Port fees: New cars (300,000 DZD), Used cars (150,000 DZD)</li>
-                                  <li>• Engine size threshold at 1.8L determines duty rate tier</li>
-                                  <li>• "Used" classification applies to cars less than 1-3 years old</li>
-                                  <li>• All calculations are estimates and may vary from actual customs fees</li>
+                                  <li>• {t.notes?.exchangeAuto ?? "Exchange rates are updated automatically from official sources"}</li>
+                                  <li>• {t.notes?.portFeesBullet ?? "Port fees: New cars (300,000 DZD), Used cars (150,000 DZD)"}</li>
+                                  <li>• {t.notes?.engineThreshold ?? "Engine size threshold at 1.8L determines duty rate tier"}</li>
+                                  <li>• {t.notes?.usedClassificationBullet ?? '"Used" classification applies to cars less than 1-3 years old'}</li>
                                 </ul>
                               </div>
                             </div>
@@ -1980,27 +1944,27 @@ export default function CustomsCalculator() {
                       <>
                         <div className="grid grid-cols-2 gap-3 text-sm">
                           <div>
-                            <p className="text-muted-foreground">Brand</p>
+                            <p className="text-muted-foreground">{t.calculator?.labels?.brand ?? "Brand"}</p>
                             <p className="font-semibold">{selectedCarDetails.marque}</p>
                           </div>
                           <div>
-                            <p className="text-muted-foreground">Model</p>
+                            <p className="text-muted-foreground">{t.calculator?.labels?.model ?? "Model"}</p>
                             <p className="font-semibold">{selectedCarDetails.modele}</p>
                           </div>
                           <div>
-                            <p className="text-muted-foreground">Year</p>
+                            <p className="text-muted-foreground">{t.calculator?.labels?.year ?? "Year"}</p>
                             <p className="font-semibold">{selectedCarDetails.annee}</p>
                           </div>
                           <div>
-                            <p className="text-muted-foreground">Engine</p>
+                            <p className="text-muted-foreground">{t.calculator?.labels?.engine ?? "Engine"}</p>
                             <p className="font-semibold">{selectedCarDetails.cylindree}cc</p>
                           </div>
                           <div>
-                            <p className="text-muted-foreground">Fuel</p>
+                            <p className="text-muted-foreground">{t.calculator?.labels?.fuel ?? "Fuel"}</p>
                             <p className="font-semibold">{selectedCarDetails.energie}</p>
                           </div>
                           <div>
-                            <p className="text-muted-foreground">Origin</p>
+                            <p className="text-muted-foreground">{t.calculator?.labels?.origin ?? "Origin"}</p>
                             <p className="font-semibold">{selectedCarDetails.paysOrigine}</p>
                           </div>
                         </div>
@@ -2009,27 +1973,27 @@ export default function CustomsCalculator() {
                       <>
                         <div className="grid grid-cols-2 gap-3 text-sm">
                           <div>
-                            <p className="text-muted-foreground">Entry Mode</p>
-                            <p className="font-semibold">Manual Entry</p>
+                            <p className="text-muted-foreground">{t.calculator?.labels?.entryMode ?? "Entry Mode"}</p>
+                            <p className="font-semibold">{t.calculator?.manualEntry ?? "Manual Entry"}</p>
                           </div>
                           <div>
-                            <p className="text-muted-foreground">Engine Size</p>
+                            <p className="text-muted-foreground">{t.calculator?.labels?.engineSize ?? "Engine Size"}</p>
                             <p className="font-semibold">{result.engineSizeCC}cc</p>
                           </div>
                           <div>
-                            <p className="text-muted-foreground">Car Age</p>
+                            <p className="text-muted-foreground">{t.calculator?.labels?.carAge ?? "Car Age"}</p>
                             <p className="font-semibold">
                               {carAge === "new"
-                                ? "New"
+                                ? (t.calculator?.labels?.new ?? "New")
                                 : carAge === "1"
-                                  ? "1 Year"
+                                  ? (t.calculator?.labels?.oneYear ?? "1 Year")
                                   : carAge === "2"
-                                    ? "2 Years"
-                                    : "3+ Years"}
+                                    ? (t.calculator?.labels?.twoYears ?? "2 Years")
+                                    : (t.calculator?.labels?.threePlusYears ?? "3+ Years")}
                             </p>
                           </div>
                           <div>
-                            <p className="text-muted-foreground">Currency</p>
+                            <p className="text-muted-foreground">{t.calculator?.labels?.currency ?? "Currency"}</p>
                             <p className="font-semibold">{manualCurrency}</p>
                           </div>
                         </div>
@@ -2040,45 +2004,37 @@ export default function CustomsCalculator() {
                       <div className={selectedCarDetails ? "pt-3 border-t border-border" : ""}>
                         <div className="space-y-3">
                           <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">Car Price:</span>
+                            <span className="text-sm text-muted-foreground">{t.calculator?.carPrice ?? "Car Price:"}</span>
                             <span className="font-semibold">
-                              {new Intl.NumberFormat("en-US").format(
+                              {formatNumber(
                                 entryMode === "search" && selectedCarDetails
                                   ? Number.parseFloat(carPrice)
                                   : Number.parseFloat(manualCarData.price),
                               )}{" "}
-                              {result.currency}
+                              {result.currency === "USD" ? "$" : result.currency === "EUR" ? "€" : (t.currencies?.DZD ?? "DZD")}
                             </span>
                           </div>
 
                           <div className="flex items-center gap-2 mb-2">
                             <CheckCircle className="h-4 w-4 text-green-600" />
-                            <h4 className="font-semibold text-green-700 dark:text-green-400 text-sm">
-                              Import Cost Calculation
-                            </h4>
+                            <h4 className="font-semibold text-green-700 dark:text-green-400 text-sm">{t.calculator?.importCostCalculation ?? "Import Cost Calculation"}</h4>
                           </div>
 
                           <div className="grid grid-cols-3 gap-2 mb-3">
                             <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2 text-center">
-                              <p className="text-xs text-muted-foreground">Customs</p>
+                              <p className="text-xs text-muted-foreground">{t.calculator?.labels?.customsShort ?? "Customs"}</p>
                               <p className="text-sm font-bold text-blue-700 dark:text-blue-400">
-                                {Math.round(
-                                  result.customsFee *
-                                    Number.parseFloat(
-                                      selectedCarCurrency === "EUR" ? eurExchangeRate : exchangeRate || "270",
-                                    ),
-                                ).toLocaleString()}{" "}
-                                DZD
+                                {Math.round(result.customsFee * result.exchangeRate).toLocaleString()} DZD
                               </p>
                             </div>
                             <div className="bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 rounded-lg p-2 text-center">
-                              <p className="text-xs text-muted-foreground">Port Fee</p>
+                              <p className="text-xs text-muted-foreground">{t.calculator?.portFee ?? "Port Fee"}</p>
                               <p className="text-sm font-bold text-orange-700 dark:text-orange-400">
                                 {result.ageCategory === "new" ? "300K" : "150K"} DZD
                               </p>
                             </div>
                             <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-2 text-center">
-                              <p className="text-xs text-muted-foreground">Total</p>
+                              <p className="text-xs text-muted-foreground">{t.calculator?.labels?.totalShort ?? "Total"}</p>
                               <p className="text-sm font-bold text-green-700 dark:text-green-400">
                                 {result.totalFee.toLocaleString()} DZD
                               </p>
@@ -2086,11 +2042,11 @@ export default function CustomsCalculator() {
                           </div>
 
                           <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border border-green-200 dark:border-green-800 rounded-lg p-3 text-center">
-                            <p className="text-xs text-muted-foreground">Total Import Cost</p>
+                            <p className="text-xs text-muted-foreground">{t.calculator?.labels?.totalImportCost ?? "Total Import Cost"}</p>
                             <p className="text-xl font-bold text-green-700 dark:text-green-400">
                               {result.totalFee.toLocaleString()} DZD
                             </p>
-                            <p className="text-xs text-muted-foreground">Including all taxes and fees</p>
+                            <p className="text-xs text-muted-foreground">{t.calculator?.labels?.inclTaxes ?? "Including all taxes and fees"}</p>
                           </div>
 
                           <div className="flex gap-2 mt-3">
@@ -2101,7 +2057,7 @@ export default function CustomsCalculator() {
                               className="flex-1 hover:bg-muted/50 transition-colors bg-transparent"
                             >
                               <FileText className="mr-1 h-3 w-3" />
-                              PDF
+                              {t.actions?.exportPDF ?? "Export PDF"}
                             </Button>
                             <Button
                               onClick={shareCalculation}
@@ -2110,7 +2066,7 @@ export default function CustomsCalculator() {
                               className="flex-1 hover:bg-muted/50 transition-colors bg-transparent"
                             >
                               <Share2 className="mr-1 h-3 w-3" />
-                              Share
+                              {t.common?.share ?? "Share"}
                             </Button>
                           </div>
                         </div>
@@ -2130,29 +2086,29 @@ export default function CustomsCalculator() {
                   <div className="max-w-2xl mx-auto mt-4">
                     <div className="flex items-center gap-2 mb-3">
                       <Calculator className="h-5 w-5" />
-                      <h3 className="text-lg font-semibold">Detailed Cost Breakdown</h3>
+                      <h3 className="text-lg font-semibold">{t.calculator?.detailedBreakdown ?? "Detailed Cost Breakdown"}</h3>
                     </div>
                     <div className="space-y-4">
                       <div className="bg-muted/30 rounded-lg p-3">
-                        <h4 className="font-semibold text-sm mb-2 text-muted-foreground">Vehicle Information</h4>
+                        <h4 className="font-semibold text-sm mb-2 text-muted-foreground">{t.calculator?.vehicleInfo ?? "Vehicle Information"}</h4>
                         <div className="grid grid-cols-2 gap-3 text-sm">
                           <div className="flex justify-between">
-                            <span>Car Price:</span>
+                            <span>{t.calculator?.carPrice ?? "Car Price:"}</span>
                             <span className="font-semibold">
-                              {new Intl.NumberFormat("en-US").format(
+                              {formatNumber(
                                 entryMode === "search" && selectedCarDetails
                                   ? Number.parseFloat(carPrice)
                                   : Number.parseFloat(manualCarData.price),
                               )}{" "}
-                              {result.currency}
+                              {result.currency === "USD" ? "$" : result.currency === "EUR" ? "€" : (t.currencies?.DZD ?? "DZD")}
                             </span>
                           </div>
                           <div className="flex justify-between">
-                            <span>Exchange Rate:</span>
-                            <span className="font-semibold">{result.exchangeRate.toFixed(2)} DZD</span>
+                            <span>{t.calculator?.exchangeRate ?? "Exchange Rate:"}</span>
+                            <span className="font-semibold">1 {result.currency === "USD" ? "$" : result.currency === "EUR" ? "€" : (t.currencies?.DZD ?? "DZD")} = {result.exchangeRate.toFixed(2)} {t.currencies?.DZD ?? "DZD"}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span>Age Category:</span>
+                            <span>{t.calculator?.ageCategory ?? "Age Category:"}</span>
                             <span className="font-semibold">
                               {result.ageCategory === "new"
                                 ? "Brand New"
@@ -2169,7 +2125,7 @@ export default function CustomsCalculator() {
                             </span>
                           </div>
                           <div className="flex justify-between">
-                            <span>Engine Size:</span>
+                            <span>{t.calculator?.engineSize ?? "Engine Size:"}</span>
                             <span className="font-semibold">
                               {result.engineSizeCC}cc
                               <span className="text-xs text-muted-foreground ml-1">
@@ -2181,16 +2137,16 @@ export default function CustomsCalculator() {
                       </div>
 
                       <div className="bg-purple-50 dark:bg-purple-950/20 rounded-lg p-3">
-                        <h4 className="font-semibold text-sm mb-2 text-purple-700 dark:text-purple-400">Applied Duty Rate</h4>
+                        <h4 className="font-semibold text-sm mb-2 text-purple-700 dark:text-purple-400">{t.calculator?.dutyRateApplied ?? "Applied Duty Rate"}</h4>
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
-                            <span>Vehicle Classification:</span>
+                            <span>{t.calculator?.vehicleClass ?? "Vehicle Classification:"}</span>
                             <span className="font-semibold">
-                              {result.ageCategory === "new" ? "New Car" : "Used Car"} + {result.engineSizeCC <= 1800 ? "≤1.8L Engine" : ">1.8L Engine"}
+                              {result.ageCategory === "new" ? (t.calculator?.newCarLabel ?? "New Car") : (t.calculator?.usedCarLabel ?? "Used Car")} + {result.engineSizeCC <= 1800 ? (t.calculator?.engineLeq18 ?? "≤1.8L Engine") : (t.calculator?.engineGt18 ?? ">1.8L Engine")}
                             </span>
                           </div>
                           <div className="flex justify-between">
-                            <span>Duty Rate Applied:</span>
+                            <span>{t.calculator?.dutyRateApplied ?? "Duty Rate Applied:"}</span>
                             <span className="font-semibold text-purple-700 dark:text-purple-400">
                               {result.ageCategory === "new"
                                 ? result.engineSizeCC <= 1800
@@ -2202,29 +2158,29 @@ export default function CustomsCalculator() {
                             </span>
                           </div>
                           <div className="text-xs text-muted-foreground bg-muted/20 rounded p-2">
-                            <strong>Rate Structure:</strong>
-                            <br />• New cars ≤1.8L: 40% | New cars &gt;1.8L: 141%
-                            <br />• Used cars ≤1.8L: 20% | Used cars &gt;1.8L: 121%
+                            <strong>{t.calculator?.rateStructure ?? "Rate Structure:"}</strong>
+                            <br />• {t.notes?.rateStructureNew ?? "New cars ≤1.8L: 40% | New cars >1.8L: 141%"}
+                            <br />• {t.notes?.rateStructureUsed ?? "Used cars ≤1.8L: 20% | Used cars >1.8L: 121%"}
                           </div>
                         </div>
                       </div>
 
                       <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-3">
-                        <h4 className="font-semibold text-sm mb-2 text-blue-700 dark:text-blue-400">Customs Fee Calculation</h4>
+                        <h4 className="font-semibold text-sm mb-2 text-blue-700 dark:text-blue-400">{t.calculator?.customsFee ?? "Customs Fee Calculation"}</h4>
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
-                            <span>Car Price:</span>
+                            <span>{t.calculator?.carPrice ?? "Car Price:"}</span>
                             <span className="font-semibold">
-                              {new Intl.NumberFormat("en-US").format(
+                              {formatNumber(
                                 entryMode === "search" && selectedCarDetails
                                   ? Number.parseFloat(carPrice)
                                   : Number.parseFloat(manualCarData.price),
                               )}{" "}
-                              {result.currency}
+                              {result.currency === "USD" ? "$" : result.currency === "EUR" ? "€" : (t.currencies?.DZD ?? "DZD")}
                             </span>
                           </div>
                           <div className="flex justify-between">
-                            <span>Duty Rate Applied:</span>
+                            <span>{t.calculator?.dutyRateApplied ?? "Duty Rate Applied:"}</span>
                             <span className="font-semibold">
                               {result.breakdown.typeFactor === 0.4
                                 ? "40%"
@@ -2236,54 +2192,51 @@ export default function CustomsCalculator() {
                             </span>
                           </div>
                           <div className="border-t border-blue-200 dark:border-blue-800 pt-2 flex justify-between font-semibold">
-                            <span>Customs Fee:</span>
-                            <span>
-                              {result.customsFee.toLocaleString()} {result.currency}
-                            </span>
+                            <span>{t.calculator?.customsFee ?? "Customs Fee:"}</span>
+                            <span>{formatNumber(result.customsFee)} {result.currency === "USD" ? "$" : result.currency === "EUR" ? "€" : (t.currencies?.DZD ?? "DZD")}</span>
                           </div>
                           <div className="flex justify-between text-muted-foreground">
-                            <span>In DZD:</span>
-                            <span className="font-semibold">{Math.round(result.customsFee * result.exchangeRate).toLocaleString()} DZD</span>
+                            <span>{t.calculator?.inDzd ?? "In DZD:"}</span>
+                            <span className="font-semibold">{Math.round(result.customsFee * result.exchangeRate).toLocaleString()} {t.currencies?.DZD ?? "DZD"}</span>
                           </div>
                         </div>
                       </div>
 
                       <div className="bg-orange-50 dark:bg-orange-950/20 rounded-lg p-3">
-                        <h4 className="font-semibold text-sm mb-2 text-orange-700 dark:text-orange-400">Additional Fees</h4>
+                        <h4 className="font-semibold text-sm mb-2 text-orange-700 dark:text-orange-400">{t.calculator?.additionalFees ?? "Additional Fees"}</h4>
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
-                            <span>Port Fee ({result.ageCategory === "new" ? "New Car" : "Used Car"}):</span>
-                            <span className="font-semibold">{result.ageCategory === "new" ? "300,000" : "150,000"} DZD</span>
+                            <span>{t.calculator?.portFee ?? "Port Fee"}: ({result.ageCategory === "new" ? (t.calculator?.newCarLabel ?? "New Car") : (t.calculator?.usedCarLabel ?? "Used Car")}):</span>
+                            <span className="font-semibold">{result.ageCategory === "new" ? "300,000" : "150,000"} {t.currencies?.DZD ?? "DZD"}</span>
                           </div>
                         </div>
                       </div>
 
                       <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-                        <h4 className="font-semibold text-sm mb-3 text-green-700 dark:text-green-400">Total Import Cost Summary</h4>
+                        <h4 className="font-semibold text-sm mb-3 text-green-700 dark:text-green-400">{t.calculator?.totalCost ?? "Total Import Cost Summary"}</h4>
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
-                            <span>Customs Fee (DZD):</span>
-                            <span className="font-semibold">{Math.round(result.customsFee * result.exchangeRate).toLocaleString()} DZD</span>
+                            <span>{t.calculator?.customsFeeDzd ?? "Customs Fee (DZD):"}</span>
+                            <span className="font-semibold">{formatNumber(Math.round(result.customsFee * result.exchangeRate))} {t.currencies?.DZD ?? "DZD"}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span>Port Fee:</span>
-                            <span className="font-semibold">{result.ageCategory === "new" ? "300,000" : "150,000"} DZD</span>
+                            <span>{t.calculator?.portFee ?? "Port Fee"}:</span>
+                            <span className="font-semibold">{result.ageCategory === "new" ? "300,000" : "150,000"} {t.currencies?.DZD ?? "DZD"}</span>
                           </div>
                           <div className="border-t border-green-200 dark:border-green-800 pt-2 flex justify-between text-lg font-bold text-green-700 dark:text-green-400">
-                            <span>Total Cost:</span>
-                            <span>{result.totalFee.toLocaleString()} DZD</span>
+                            <span>{t.calculator?.totalCost ?? "Total Cost:"}</span>
+                            <span>{result.totalFee.toLocaleString()} {t.currencies?.DZD ?? "DZD"}</span>
                           </div>
                         </div>
                       </div>
 
                       <div className="bg-muted/20 rounded-lg p-3">
-                        <h4 className="font-semibold text-sm mb-2 text-muted-foreground">Calculation Notes</h4>
+                        <h4 className="font-semibold text-sm mb-2 text-muted-foreground">{t.notes?.calculationNotes ?? "Calculation Notes"}</h4>
                         <ul className="text-xs text-muted-foreground space-y-1">
-                          <li>• Exchange rates are updated automatically from official sources</li>
-                          <li>• Port fees: New cars (300,000 DZD), Used cars (150,000 DZD)</li>
-                          <li>• Engine size threshold at 1.8L determines duty rate tier</li>
-                          <li>• "Used" classification applies to cars less than 1-3 years old</li>
-                          <li>• All calculations are estimates and may vary from actual customs fees</li>
+                          <li>• {t.notes?.exchangeAuto ?? "Exchange rates are updated automatically from official sources"}</li>
+                          <li>• {t.notes?.portFeesBullet ?? "Port fees: New cars (300,000 DZD), Used cars (150,000 DZD)"}</li>
+                          <li>• {t.notes?.engineThreshold ?? "Engine size threshold at 1.8L determines duty rate tier"}</li>
+                          <li>• {t.notes?.usedClassificationBullet ?? '"Used" classification applies to cars less than 1-3 years old'}</li>
                         </ul>
                       </div>
                     </div>
@@ -2297,10 +2250,7 @@ export default function CustomsCalculator() {
                     <Alert className="hover:bg-muted/30 transition-colors border-l-4 border-l-amber-500 bg-amber-50/50 dark:bg-amber-950/20">
                       <Info className="h-4 w-4 text-amber-600" aria-hidden="true" />
                       <AlertDescription className="text-sm leading-relaxed">
-                        <strong className="text-amber-800 dark:text-amber-200">Important:</strong> These calculations
-                        are estimates based on standard rates. Actual fees may vary depending on specific vehicle
-                        characteristics, current regulations, and exchange rate fluctuations. Please consult with
-                        Algerian customs authorities for official calculations.
+                        <strong className="text-amber-800 dark:text-amber-200">{t.notes?.important ?? "Important:"}</strong> {t.notes?.estimatesDisclaimer ?? "These calculations are estimates based on standard rates. Actual fees may vary depending on specific vehicle characteristics, current regulations, and exchange rate fluctuations. Please consult with Algerian customs authorities for official calculations."}
                       </AlertDescription>
                     </Alert>
 
@@ -2308,7 +2258,7 @@ export default function CustomsCalculator() {
                       <CardHeader className="pb-4">
                         <CardTitle className="text-base sm:text-lg flex items-center gap-2">
                           <Info className="h-5 w-5 text-blue-600" aria-hidden="true" />
-                          How It Works
+                          {t.notes?.howItWorks ?? "How It Works"}
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-4 text-sm">
@@ -2316,36 +2266,25 @@ export default function CustomsCalculator() {
                           <div className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center flex-shrink-0 mt-0.5">
                             <span className="text-xs font-bold text-blue-700 dark:text-blue-300">1</span>
                           </div>
-                          <p className="leading-relaxed">
-                            The car's age category determines if it's treated as <strong>new</strong> (Brand New) or{" "}
-                            <strong>used</strong> (Less than 1-3 years)
-                          </p>
+                          <p className="leading-relaxed">{t.notes?.step1 ?? "The car's age category determines if it's treated as new (Brand New) or used (Less than 1-3 years)"}</p>
                         </div>
                         <div className="flex gap-3 p-3 rounded-lg bg-green-50/50 dark:bg-green-950/20 border border-green-200/50 dark:border-green-800/50">
                           <div className="w-7 h-7 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center flex-shrink-0 mt-0.5">
                             <span className="text-xs font-bold text-green-700 dark:text-green-300">2</span>
                           </div>
-                          <p className="leading-relaxed">
-                            <strong>New cars:</strong> 40% (≤1.8L) or 141% ({">"}1.8L) + 300,000 DZD port fee
-                            <br />
-                            <strong>Used cars:</strong> 20% (≤1.8L) or 121% ({">"}1.8L) + 150,000 DZD port fee
-                          </p>
+                          <p className="leading-relaxed" dangerouslySetInnerHTML={{ __html: (t.notes?.step2 ?? "New cars: 40% (≤1.8L) or 141% (>1.8L) + 300,000 DZD port fee<br />Used cars: 20% (≤1.8L) or 121% (>1.8L) + 150,000 DZD port fee").replace(/\n/g, "<br />") }} />
                         </div>
                         <div className="flex gap-3 p-3 rounded-lg bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200/50 dark:border-purple-800/50">
                           <div className="w-7 h-7 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center flex-shrink-0 mt-0.5">
                             <span className="text-xs font-bold text-purple-700 dark:text-purple-300">3</span>
                           </div>
-                          <p className="leading-relaxed">
-                            The customs duty is calculated as: <strong>(Car Price × Rate) + Port Fee</strong>
-                          </p>
+                          <p className="leading-relaxed">{t.notes?.step3 ?? "The customs duty is calculated as: (Car Price × Rate) + Port Fee"}</p>
                         </div>
                         <div className="flex gap-3 p-3 rounded-lg bg-orange-50/50 dark:bg-orange-950/20 border border-orange-200/50 dark:border-orange-800/50">
                           <div className="w-7 h-7 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center flex-shrink-0 mt-0.5">
                             <span className="text-xs font-bold text-orange-700 dark:text-orange-300">4</span>
                           </div>
-                          <p className="leading-relaxed">
-                            The final amount is converted to Algerian Dinars using the current exchange rate
-                          </p>
+                          <p className="leading-relaxed">{t.notes?.step4 ?? "The final amount is converted to Algerian Dinars using the current exchange rate"}</p>
                         </div>
                       </CardContent>
                     </Card>
@@ -2359,15 +2298,15 @@ export default function CustomsCalculator() {
 
       <footer className="mt-8 sm:mt-12 text-center text-xs sm:text-sm text-muted-foreground px-2 py-4 border-t border-border/50">
         <p className="leading-relaxed">
-          For official information, visit the{" "}
+          {t.notes?.footerLead ?? "For official information, visit the"} {" "}
           <a
             href="#"
             className="text-primary hover:underline transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 rounded px-1"
-            aria-label="Visit Algerian Customs Authority website"
+            aria-label={t.aria?.visitAuthority ?? "Visit Algerian Customs Authority website"}
           >
-            Algerian Customs Authority
+            {t.notes?.footerAuthority ?? "Algerian Customs Authority"}
           </a>{" "}
-          or contact your local customs office.
+          {t.notes?.footerTail ?? "or contact your local customs office."}
         </p>
       </footer>
     </div>
