@@ -43,7 +43,8 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { LanguageToggle } from "@/components/language-toggle"
 import { useLanguage } from "@/components/language-provider"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { Switch } from "@/components/ui/switch"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import CarBrowser from "@/components/car-browser"
 
 import { useRouter, useSearchParams } from "next/navigation"
 
@@ -195,6 +196,7 @@ export default function CustomsCalculator() {
   const [filteredCars, setFilteredCars] = useState<CarData[]>([])
 
   const [selectedCarDetails, setSelectedCarDetails] = useState<CarData | null>(null)
+  const [useBrowseUI, setUseBrowseUI] = useState(false)
 
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -413,6 +415,7 @@ export default function CustomsCalculator() {
     setFilteredCars([])
     setIsSearching(false)
     setEntryMode("search")
+    setUseBrowseUI(false)
     setManualCarData({ engineSize: "", price: "" })
     setCalculatedEngineSize("")
   }
@@ -1484,8 +1487,8 @@ export default function CustomsCalculator() {
             {/* Left Column - Search/Manual Entry Cards */}
             <div className="space-y-6">
               {entryMode === "search" && (
-                <Card className={`shadow-lg hover:shadow-xl transition-all duration-300 ${language === "ar" ? "border-r-4 border-r-primary/20" : "border-l-4 border-l-primary/20"}`}>
-                  <CardHeader className="pb-4 sm:pb-6">
+                <Card className={`shadow-lg hover:shadow-xl transition-all duration-300 ${language === "ar" ? "border-r-4 border-r-primary/20" : "border-l-4 border-l-primary/20"} gap-0`}>
+                  <CardHeader className="pb-0">
                     <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                       <Search className="h-5 w-5 text-primary" aria-hidden="true" />
                       {t.calculator?.searchDatabaseTitle ?? "Search Official Car Database"}
@@ -1511,7 +1514,113 @@ export default function CustomsCalculator() {
                       {t.calculator?.findFromList ?? "Find your car from the official Algerian customs reference list"}
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-3 pt-4">
+                    <div className={`flex items-center gap-3 ${language === "ar" ? "justify-end flex-row-reverse" : "justify-start"}`}>
+                      <div className={`text-sm text-muted-foreground ${language === "ar" ? "order-2" : "order-1"}`}>{t.calculator?.labels?.entryMode ?? "Selection mode"}</div>
+                      <ToggleGroup type="single" value={useBrowseUI ? "browse" : "search"} onValueChange={(v) => { if (v === "browse") setUseBrowseUI(true); if (v === "search") setUseBrowseUI(false) }} className={`${language === "ar" ? "order-1" : "order-2"}`}>
+                        {language === "ar" ? (
+                          <>
+                            <ToggleGroupItem value="browse" aria-label="Browse cards">{t.common?.browse ?? "Browse"}</ToggleGroupItem>
+                            <ToggleGroupItem value="search" aria-label="Search list">{t.common?.search ?? "Search"}</ToggleGroupItem>
+                          </>
+                        ) : (
+                          <>
+                            <ToggleGroupItem value="search" aria-label="Search list">{t.common?.search ?? "Search"}</ToggleGroupItem>
+                            <ToggleGroupItem value="browse" aria-label="Browse cards">{t.common?.browse ?? "Browse"}</ToggleGroupItem>
+                          </>
+                        )}
+                      </ToggleGroup>
+                    </div>
+
+                    {useBrowseUI ? (
+                      <div className="space-y-4">
+                        {!carAge && (
+                          <Alert className="animate-in slide-in-from-left-2">
+                            <Info className="h-4 w-4" />
+                            <AlertDescription className="text-sm">
+                              {"Please select the car age first to use the browser."}
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                        <CarBrowser
+                          cars={carData}
+                          onBack={() => {
+                            setSelectedCar("")
+                            setSelectedCarDetails(null)
+                            setUseReferencePrice(false)
+                            setCarPrice("")
+                            setSearchTerm("")
+                          }}
+                          externalQuery={searchTerm}
+                          onSelect={(car) => {
+                            const carId = `${car.marque}-${car.modele}-${car.numero}`
+                            setSelectedCar(carId)
+                            setSelectedCarDetails(car)
+                            setSelectedCarCurrency(car.currency)
+                            setSearchTerm(`${car.marque} ${car.modele} (${car.cylindree}cc, ${car.energie}, ${car.currency})`)
+                            try {
+                              const params = buildQueryParams()
+                              params.set("numero", car.numero)
+                              const relativeUrl = `${window.location.pathname}?${params.toString()}`
+                              router.replace(relativeUrl)
+                            } catch {}
+                            if (carAge) {
+                              let price = 0
+                              switch (carAge) {
+                                case "new":
+                                  price = car.neuf
+                                  break
+                                case "less-than-1":
+                                  price = car.moinsUn
+                                  break
+                                case "less-than-2":
+                                  price = car.moinsDeux
+                                  break
+                                case "less-than-3":
+                                  price = car.moinsTrois
+                                  break
+                              }
+                              if (price > 0) {
+                                setCarPrice(price.toString())
+                                setUseReferencePrice(true)
+                                const currentRate = car.currency === "EUR" ? eurExchangeRate : exchangeRate
+                                calculateCustomsFee(price.toString(), carAge, currentRate, car.currency, car.cylindree, car)
+                              }
+                            }
+                          }}
+                        />
+                        {selectedCarDetails && (
+                          <div className="rounded-md border p-3 bg-muted/30">
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-2 font-medium">
+                                <Car className="h-4 w-4 text-primary" />
+                                <span>{selectedCarDetails.marque} {selectedCarDetails.modele}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {carAge && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    {carAge === "new" ? (t.calculator?.brandNew ?? "Brand New") : carAge.replaceAll("-", " ")}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-sm text-muted-foreground mt-1">
+                              {selectedCarDetails.cylindree}cc • {selectedCarDetails.energie} • {selectedCarDetails.paysOrigine} • {selectedCarDetails.currency}
+                            </div>
+                            {carPrice && (
+                              <div className="mt-2 text-sm">
+                                <span className="text-muted-foreground">{t.calculator?.carPrice ?? "Car Price:"}</span>{" "}
+                                <span className="font-semibold">{formatNumber(Number.parseFloat(carPrice))} {selectedCarDetails.currency}</span>
+                                {useReferencePrice && (
+                                  <Badge variant="secondary" className="ml-2 text-[10px]">{t.calculator?.usingReferencePrice ?? "Reference"}</Badge>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                    <>
                     {errorState && (
                       <Alert
                         variant="destructive"
@@ -1609,6 +1718,8 @@ export default function CustomsCalculator() {
                         </div>
                       )}
                     </div>
+                    </>
+                    )}
 
                     <div className="space-y-2">
                       <Label htmlFor="car-age" className="text-sm font-medium flex items-center gap-2">

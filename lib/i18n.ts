@@ -23,6 +23,7 @@ type Dictionary = {
   }
   common?: {
     search: string
+    browse: string
     reset: string
     history: string
     clearAll: string
@@ -32,6 +33,8 @@ type Dictionary = {
     retrying: string
     retry: string
     updated: string
+    showMore: string
+    showLess: string
   }
   calculator?: {
     appTitle: string
@@ -187,6 +190,7 @@ export const dictionaries: Record<SupportedLanguage, Dictionary> = {
     currencies: { USD: "USD", EUR: "EUR", DZD: "DZD" },
     common: {
       search: "Search",
+      browse: "Browse",
       reset: "Reset",
       history: "History",
       clearAll: "Clear All",
@@ -196,6 +200,8 @@ export const dictionaries: Record<SupportedLanguage, Dictionary> = {
       retrying: "Retrying...",
       retry: "Retry",
       updated: "Updated:",
+      showMore: "Show more",
+      showLess: "Show less",
     },
     calculator: {
       appTitle: "Car Import Customs Calculator",
@@ -349,6 +355,7 @@ export const dictionaries: Record<SupportedLanguage, Dictionary> = {
     currencies: { USD: "USD", EUR: "EUR", DZD: "DZD" },
     common: {
       search: "Rechercher",
+      browse: "Parcourir",
       reset: "Réinitialiser",
       history: "Historique",
       clearAll: "Tout effacer",
@@ -358,6 +365,8 @@ export const dictionaries: Record<SupportedLanguage, Dictionary> = {
       retrying: "Nouvelle tentative...",
       retry: "Réessayer",
       updated: "Mis à jour :",
+      showMore: "Afficher plus",
+      showLess: "Afficher moins",
     },
     calculator: {
       appTitle: "Calculateur des droits de douane à l'importation",
@@ -512,6 +521,7 @@ export const dictionaries: Record<SupportedLanguage, Dictionary> = {
     currencies: { USD: "دولار", EUR: "يورو", DZD: "دج" },
     common: {
       search: "بحث",
+      browse: "تصفح",
       reset: "إعادة تعيين",
       history: "السجل",
       clearAll: "مسح الكل",
@@ -521,6 +531,8 @@ export const dictionaries: Record<SupportedLanguage, Dictionary> = {
       retrying: "إعادة المحاولة...",
       retry: "إعادة المحاولة",
       updated: "آخر تحديث:",
+      showMore: "عرض المزيد",
+      showLess: "عرض أقل",
     },
     calculator: {
       appTitle: "حاسبة رسوم جمارك السيارات",
