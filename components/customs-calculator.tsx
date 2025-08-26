@@ -307,6 +307,12 @@ export default function CustomsCalculator() {
       return
     }
 
+    // If there are params present but car data is not yet loaded, wait until car data is available
+    // This prevents prematurely marking hydration complete and wiping the incoming query params
+    if (carData.length === 0) {
+      return
+    }
+
     // Determine intended mode
     let intendedMode: "manual" | "search"
     if (entryModeParam === "manual") intendedMode = "manual"
@@ -401,7 +407,7 @@ export default function CustomsCalculator() {
         setDidHydrateFromURL(true)
       }
     }
-    // If nothing matched, still mark hydration complete to enable sync
+    // If nothing matched (with car data available), still mark hydration complete to enable sync
     if (!didHydrateFromURL) setDidHydrateFromURL(true)
   }, [searchParams, carData, eurExchangeRate, exchangeRate, didHydrateFromURL])
 
