@@ -1263,7 +1263,7 @@ export default function CustomsCalculator() {
         <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-6xl">
           <div className="text-center mb-3 sm:mb-8">
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2 sm:hidden">
+              <div className="flex-1 flex items-center gap-2 sm:hidden">
                 <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
                   <SheetTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Open menu">
@@ -1299,6 +1299,7 @@ export default function CustomsCalculator() {
                   </SheetContent>
                 </Sheet>
               </div>
+              <div className="hidden sm:block flex-1" />
               <div className="flex items-center justify-center gap-2 sm:gap-3">
                 <div className="p-2 sm:p-3 bg-primary/10 rounded-full animate-pulse">
                   <Car className="h-6 w-6 sm:h-8 sm:w-8 text-primary" aria-hidden="true" />
@@ -1744,18 +1745,8 @@ export default function CustomsCalculator() {
                         className="w-full pl-12 pr-10 py-3 border border-input bg-background hover:bg-muted/30 focus:bg-background transition-colors min-h-[48px] text-base rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 appearance-none"
                       >
                         <option value="">{t.calculator?.selectEngineSize ?? "Select engine size"}</option>
-                        <option value="1000">1000cc (1.0L)</option>
-                        <option value="1200">1200cc (1.2L)</option>
-                        <option value="1400">1400cc (1.4L)</option>
-                        <option value="1600">1600cc (1.6L)</option>
-                        <option value="1800">1800cc (1.8L)</option>
-                        <option value="2000">2000cc (2.0L)</option>
-                        <option value="2200">2200cc (2.2L)</option>
-                        <option value="2500">2500cc (2.5L)</option>
-                        <option value="3000">3000cc (3.0L)</option>
-                        <option value="3500">3500cc (3.5L)</option>
-                        <option value="4000">4000cc (4.0L)</option>
-                        <option value="5000">5000cc (5.0L)</option>
+                        <option value="1800">{t.calculator?.engineLeq18 ?? "≤ 1.8L"}</option>
+                        <option value="1801">{t.calculator?.engineGt18 ?? "> 1.8L"}</option>
                       </select>
                     </div>
 
