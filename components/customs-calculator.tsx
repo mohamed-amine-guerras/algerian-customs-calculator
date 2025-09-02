@@ -234,6 +234,9 @@ export default function CustomsCalculator() {
   const pdfRef = useRef<HTMLDivElement>(null)
   const breakdownRef = useRef<HTMLDivElement>(null)
   const [suppressNextHistory, setSuppressNextHistory] = useState(false)
+  const searchCardRef = useRef<HTMLDivElement>(null)
+  const manualCardRef = useRef<HTMLDivElement>(null)
+  const hasScrolledToResultRef = useRef(false)
 
   const getHistoryKey = (args: {
     brand: string
@@ -420,10 +423,22 @@ export default function CustomsCalculator() {
     setSearchTerm("")
     setFilteredCars([])
     setIsSearching(false)
-    setEntryMode("search")
     setUseBrowseUI(false)
     setManualCarData({ engineSize: "", price: "" })
     setCalculatedEngineSize("")
+
+    // Scroll back to the relevant card after clearing state
+    try {
+      const isSmallScreen = window.matchMedia && window.matchMedia('(max-width: 640px)').matches
+      if (isSmallScreen) {
+        setTimeout(() => {
+          const target = (entryMode === "manual" ? manualCardRef.current : searchCardRef.current)
+          if (target && typeof target.scrollIntoView === "function") {
+            target.scrollIntoView({ behavior: "smooth", block: "start" })
+          }
+        }, 0)
+      }
+    } catch {}
   }
 
   const fetchCarData = async () => {
@@ -915,11 +930,33 @@ export default function CustomsCalculator() {
 
     try {
       const isSmallScreen = window.matchMedia && window.matchMedia('(max-width: 640px)').matches
-      if (isSmallScreen && pdfRef.current) {
+      // For search mode, the result card already exists before result is set
+      if (entryMode === 'search' && isSmallScreen && pdfRef.current) {
         pdfRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }
     } catch {}
   }
+
+  // Ensure smooth scroll after first manual calculation when result card mounts
+  useEffect(() => {
+    if (!result) {
+      hasScrolledToResultRef.current = false
+      return
+    }
+    if (entryMode !== 'manual') return
+    if (hasScrolledToResultRef.current) return
+    try {
+      const isSmallScreen = window.matchMedia && window.matchMedia('(max-width: 640px)').matches
+      if (isSmallScreen && pdfRef.current) {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            pdfRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            hasScrolledToResultRef.current = true
+          })
+        })
+      }
+    } catch {}
+  }, [result, entryMode])
 
   const clearHistory = () => {
     setCalculationHistory([])
@@ -1298,9 +1335,6 @@ export default function CustomsCalculator() {
                       >
                         <Calculator className="h-4 w-4 mr-2" /> {t.calculator?.manualEntry ?? "Manual Entry"}
                       </Button>
-                      <Button variant="ghost" onClick={handleReset} className="w-full justify-start h-11">
-                        <RotateCcw className="h-4 w-4 mr-2" /> {t.common?.reset ?? "Reset"}
-                      </Button>
                       <Button variant="ghost" onClick={() => { setShowHistory(true); setIsMenuOpen(false) }} className="w-full justify-start h-11">
                         <History className="h-4 w-4 mr-2" /> {t.common?.history ?? "History"}
                       </Button>
@@ -1362,14 +1396,6 @@ export default function CustomsCalculator() {
                 >
                   <Calculator className="h-4 w-4" />
                   {t.calculator?.manualEntry ?? "Manual Entry"}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleReset}
-                  className="flex items-center gap-2 min-h-[44px] px-4 sm:px-6 bg-transparent"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                  {t.common?.reset ?? "Reset"}
                 </Button>
               </div>
 
@@ -1493,7 +1519,7 @@ export default function CustomsCalculator() {
             {/* Left Column - Search/Manual Entry Cards */}
             <div className="space-y-6">
               {entryMode === "search" && (
-                <Card className={`shadow-lg hover:shadow-xl transition-all duration-300 ${language === "ar" ? "border-r-4 border-r-primary/20" : "border-l-4 border-l-primary/20"} gap-0`}>
+                <Card ref={searchCardRef} className={`shadow-lg hover:shadow-xl transition-all duration-300 ${language === "ar" ? "border-r-4 border-r-primary/20" : "border-l-4 border-l-primary/20"} gap-0`}>
                   <CardHeader className="pb-0">
                     <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                       <Search className="h-5 w-5 text-primary" aria-hidden="true" />
@@ -1521,21 +1547,31 @@ export default function CustomsCalculator() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3 pt-4">
-                    <div className={`flex items-center gap-3 ${language === "ar" ? "justify-end flex-row-reverse" : "justify-start"}`}>
-                      <div className={`text-sm text-muted-foreground ${language === "ar" ? "order-2" : "order-1"}`}>{t.calculator?.labels?.entryMode ?? "Selection mode"}</div>
-                      <ToggleGroup type="single" value={useBrowseUI ? "browse" : "search"} onValueChange={(v) => { if (v === "browse") setUseBrowseUI(true); if (v === "search") setUseBrowseUI(false) }} className={`${language === "ar" ? "order-1" : "order-2"}`}>
-                        {language === "ar" ? (
-                          <>
-                            <ToggleGroupItem value="browse" aria-label="Browse cards">{t.common?.browse ?? "Browse"}</ToggleGroupItem>
-                            <ToggleGroupItem value="search" aria-label="Search list">{t.common?.search ?? "Search"}</ToggleGroupItem>
-                          </>
-                        ) : (
-                          <>
-                            <ToggleGroupItem value="search" aria-label="Search list">{t.common?.search ?? "Search"}</ToggleGroupItem>
-                            <ToggleGroupItem value="browse" aria-label="Browse cards">{t.common?.browse ?? "Browse"}</ToggleGroupItem>
-                          </>
-                        )}
-                      </ToggleGroup>
+                    <div className={`flex items-center gap-3 justify-between ${language === "ar" ? "flex-row-reverse" : ""}`}>
+                      <div className={`${language === "ar" ? "order-2" : "order-1"} flex items-center gap-3`}>
+                        <div className="text-sm text-muted-foreground">{t.calculator?.labels?.entryMode ?? "Selection mode"}</div>
+                        <ToggleGroup type="single" value={useBrowseUI ? "browse" : "search"} onValueChange={(v) => { if (v === "browse") setUseBrowseUI(true); if (v === "search") setUseBrowseUI(false) }}>
+                          {language === "ar" ? (
+                            <>
+                              <ToggleGroupItem value="browse" aria-label="Browse cards">{t.common?.browse ?? "Browse"}</ToggleGroupItem>
+                              <ToggleGroupItem value="search" aria-label="Search list">{t.common?.search ?? "Search"}</ToggleGroupItem>
+                            </>
+                          ) : (
+                            <>
+                              <ToggleGroupItem value="search" aria-label="Search list">{t.common?.search ?? "Search"}</ToggleGroupItem>
+                              <ToggleGroupItem value="browse" aria-label="Browse cards">{t.common?.browse ?? "Browse"}</ToggleGroupItem>
+                            </>
+                          )}
+                        </ToggleGroup>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleReset}
+                        className={`${language === "ar" ? "order-1" : "order-2"}`}
+                      >
+                        <RotateCcw className={`h-4 w-4 ${language === "ar" ? "ml-2" : "mr-2"}`} /> {t.common?.reset ?? "Reset"}
+                      </Button>
                     </div>
 
                     {useBrowseUI ? (
@@ -1775,7 +1811,7 @@ export default function CustomsCalculator() {
               )}
 
               {entryMode === "manual" && (
-                <Card className={`shadow-lg hover:shadow-xl transition-all duration-300 ${language === "ar" ? "border-r-4 border-r-primary/20" : "border-l-4 border-l-primary/20"}`}>
+                <Card ref={manualCardRef} className={`shadow-lg hover:shadow-xl transition-all duration-300 ${language === "ar" ? "border-r-4 border-r-primary/20" : "border-l-4 border-l-primary/20"}`}>
                   <CardHeader className="pb-4 sm:pb-6">
                     <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                       <Calculator className="h-5 w-5 text-primary" aria-hidden="true" />
@@ -2459,7 +2495,16 @@ export default function CustomsCalculator() {
         </main>
       </TooltipProvider>
 
-      
+      {/* Mobile bottom reset action - only when a calculation/result is present */}
+      {((entryMode === "search" && selectedCarDetails) || (entryMode === "manual" && result)) && (
+        <div className="fixed bottom-4 left-0 right-0 px-4 sm:hidden z-40">
+          <div className="max-w-7xl mx-auto">
+            <Button onClick={handleReset} className="w-full h-12 shadow-lg">
+              <RotateCcw className="h-4 w-4 mr-2" /> {t.common?.reset ?? "Reset"}
+            </Button>
+          </div>
+        </div>
+      )}
 
       <footer className="mt-8 sm:mt-12 text-center text-xs sm:text-sm text-muted-foreground px-2 py-4 border-t border-border/50">
         <p className="leading-relaxed">
