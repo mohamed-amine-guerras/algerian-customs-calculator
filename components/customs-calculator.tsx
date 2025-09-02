@@ -1564,14 +1564,16 @@ export default function CustomsCalculator() {
                           )}
                         </ToggleGroup>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleReset}
-                        className={`${language === "ar" ? "order-1" : "order-2"}`}
-                      >
-                        <RotateCcw className={`h-4 w-4 ${language === "ar" ? "ml-2" : "mr-2"}`} /> {t.common?.reset ?? "Reset"}
-                      </Button>
+                      {result && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleReset}
+                          className={`${language === "ar" ? "order-1" : "order-2"}`}
+                        >
+                          <RotateCcw className={`h-4 w-4 ${language === "ar" ? "ml-2" : "mr-2"}`} /> {t.common?.reset ?? "Reset"}
+                        </Button>
+                      )}
                     </div>
 
                     {useBrowseUI ? (
@@ -1865,6 +1867,16 @@ export default function CustomsCalculator() {
                             <SelectItem value="EUR">€</SelectItem>
                           </SelectContent>
                         </Select>
+                        {result && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleReset}
+                            className={`${language === "ar" ? "mr-auto" : "ml-auto"}`}
+                          >
+                            <RotateCcw className={`h-4 w-4 ${language === "ar" ? "ml-2" : "mr-2"}`} /> {t.common?.reset ?? "Reset"}
+                          </Button>
+                        )}
                       </div>
                       <p className="text-xs text-muted-foreground">{t.calculator?.currentRateLabel ?? "Current rate:"} 1 {manualCurrency === "USD" ? "$" : "€"} = {manualCurrency === "USD" ? exchangeRate : eurExchangeRate} {t.currencies?.DZD ?? "DZD"}</p>
                     </div>
