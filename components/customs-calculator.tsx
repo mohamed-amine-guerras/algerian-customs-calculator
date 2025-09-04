@@ -237,6 +237,7 @@ export default function CustomsCalculator() {
   const searchCardRef = useRef<HTMLDivElement>(null)
   const manualCardRef = useRef<HTMLDivElement>(null)
   const hasScrolledToResultRef = useRef(false)
+  const [browseSessionId, setBrowseSessionId] = useState(0)
 
   const getHistoryKey = (args: {
     brand: string
@@ -414,7 +415,7 @@ export default function CustomsCalculator() {
     if (!didHydrateFromURL) setDidHydrateFromURL(true)
   }, [searchParams, carData, eurExchangeRate, exchangeRate, didHydrateFromURL])
 
-  const handleReset = () => {
+  const handleReset = (preserveBrowseMode: boolean = false) => {
     setSelectedCarDetails(null)
     setResult(null)
     setCarAge("new")
@@ -423,9 +424,14 @@ export default function CustomsCalculator() {
     setSearchTerm("")
     setFilteredCars([])
     setIsSearching(false)
-    setUseBrowseUI(false)
+    if (!preserveBrowseMode) setUseBrowseUI(false)
     setManualCarData({ engineSize: "", price: "" })
     setCalculatedEngineSize("")
+
+    // When in browse mode and preserving it, re-mount the browser to reset to the brand step
+    if (preserveBrowseMode && useBrowseUI) {
+      setBrowseSessionId((id) => id + 1)
+    }
 
     // Scroll back to the relevant card after clearing state
     try {
@@ -1568,7 +1574,7 @@ export default function CustomsCalculator() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={handleReset}
+                          onClick={() => handleReset(true)}
                           className={`${language === "ar" ? "order-1" : "order-2"}`}
                         >
                           <RotateCcw className={`h-4 w-4 ${language === "ar" ? "ml-2" : "mr-2"}`} /> {t.common?.reset ?? "Reset"}
@@ -1587,6 +1593,7 @@ export default function CustomsCalculator() {
                           </Alert>
                         )}
                         <CarBrowser
+                          key={browseSessionId}
                           cars={carData}
                           onBack={() => {
                             setSelectedCar("")
@@ -1871,7 +1878,7 @@ export default function CustomsCalculator() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={handleReset}
+                            onClick={() => handleReset(false)}
                             className={`${language === "ar" ? "mr-auto" : "ml-auto"}`}
                           >
                             <RotateCcw className={`h-4 w-4 ${language === "ar" ? "ml-2" : "mr-2"}`} /> {t.common?.reset ?? "Reset"}
@@ -2511,7 +2518,7 @@ export default function CustomsCalculator() {
       {((entryMode === "search" && selectedCarDetails) || (entryMode === "manual" && result)) && (
         <div className="fixed bottom-4 left-0 right-0 px-4 sm:hidden z-40">
           <div className="max-w-7xl mx-auto">
-            <Button onClick={handleReset} className="w-full h-12 shadow-lg">
+            <Button onClick={() => handleReset(false)} className="w-full h-12 shadow-lg">
               <RotateCcw className="h-4 w-4 mr-2" /> {t.common?.reset ?? "Reset"}
             </Button>
           </div>

@@ -334,11 +334,7 @@ export default function CarBrowser({ cars, onSelect, onBack, externalQuery }: Ca
             </BreadcrumbList>
           </Breadcrumb>
         </div>
-        <div className={`${language === "ar" ? "order-1 mr-auto" : "order-2 ml-auto"}`}>
-          {((selectedBrand || selectedModel || selectedEngineKey || selectedOrigin) || (brandQuery || modelQuery || engineQuery || originQuery)) && (
-            <Button variant="ghost" size="sm" onClick={() => resetTo("brand")}> {t.common?.reset ?? "Reset"} </Button>
-          )}
-        </div>
+        <div className={`${language === "ar" ? "order-1 mr-auto" : "order-2 ml-auto"}`}></div>
       </div>
 
       {step === "brand" && (
