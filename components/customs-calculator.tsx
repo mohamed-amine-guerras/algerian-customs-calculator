@@ -1570,16 +1570,16 @@ export default function CustomsCalculator() {
                           )}
                         </ToggleGroup>
                       </div>
-                      {result && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleReset(true)}
-                          className={`${language === "ar" ? "order-1" : "order-2"}`}
-                        >
-                          <RotateCcw className={`h-4 w-4 ${language === "ar" ? "ml-2" : "mr-2"}`} /> {t.common?.reset ?? "Reset"}
-                        </Button>
-                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleReset(true)}
+                        className={`${language === "ar" ? "order-1" : "order-2"} ${result ? "" : "invisible pointer-events-none"}`}
+                        aria-hidden={!result}
+                        tabIndex={result ? 0 : -1}
+                      >
+                        <RotateCcw className={`h-4 w-4 ${language === "ar" ? "ml-2" : "mr-2"}`} /> {t.common?.reset ?? "Reset"}
+                      </Button>
                     </div>
 
                     {useBrowseUI ? (
